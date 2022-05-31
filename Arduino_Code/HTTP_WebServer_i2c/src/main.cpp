@@ -91,7 +91,7 @@ void HandleRoot(){
   Serial.println("Device connected");
 }
 
-const String returnMessages[] = {"STOP", "FO", "BA", "RT", "LT"};
+const String returnMessages[] = {"STOP", "forward", "back", "right", "left", "clockwise", "anticlockwise"};
 
 void HandleMovement(){
   char message[10] = "J00A000B";
@@ -125,7 +125,9 @@ void HandleMovement(){
   Wire.write(message);
   Wire.endTransmission();
 
-  server.send(200, F("text/plain"), returnMessages[direction]);
+  const String returnMessage = returnMessages[direction];
+  Serial.println(returnMessage);
+  server.send(200, F("text/plain"), F("moving"));
 }
 
 // void Forward(){
