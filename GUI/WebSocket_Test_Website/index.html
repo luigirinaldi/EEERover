@@ -7,24 +7,48 @@
   <title>Document</title>
 </head>
 <body>
-  <button onclick="buttonFunc()">Click ME</button>
+  <textarea id="ipContainer"></textarea>
+  <br>
+  <button onclick="updateIP()">Update IP address</button>
+  <br>
+  <br>
   <input type="range" min="0" max="255" value="127" class="slider" id="SpeedControl">
+  <br>
+  <br>
+  <b>Sped:</b><span id="spedDisplay">128</span>
+
+  <br><br>
+  <span id="state"></span>
 
   
   <script>
-    function buttonFunc(){
-      console.log("Test!");
-    }
     let roverIP = "http://192.168.205.45";
+    let globalSped = 128;
+    let globalDir = 0;
     let slider  = document.getElementById("SpeedControl");
+    let spedDisplay = document.getElementById("spedDisplay");
+
+    function updateIP(){
+      roverIP = `http://${document.getElementById("ipContainer").value}`;
+      console.log(`updated IP to ${roverIP}`);
+    }
+
+    slider.addEventListener("input", function () {
+      spedDisplay.innerHTML = slider.value;
+      globalSped = slider.value;
+      move();
+    }, false);
 
     var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {if (this.readyState == 4 && this.status == 200) {document.getElementById("state").innerHTML = this.responseText;}};
-    function FO() {xhttp.open("GET", `${roverIP}/FO`); xhttp.send();}
-    function BA() {xhttp.open("GET", `${roverIP}/BA`); xhttp.send();}
-    function RT() {xhttp.open("GET", `${roverIP}/RT`); xhttp.send();}
-    function LT() {xhttp.open("GET", `${roverIP}/LT`); xhttp.send();}
-    function STOP() {xhttp.open("GET", `${roverIP}/STOP`); xhttp.send();}
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        document.getElementById("state").innerHTML = this.responseText;}
+    };
+    
+    function move() {
+      xhttp.open("GET", `${roverIP}/move?dir=${globalDir}&sped=${globalSped}`); 
+      xhttp.send();
+    }
 
     window.addEventListener("keydown", function (event) {
     if (event.defaultPrevented) {
@@ -32,23 +56,53 @@
     }
 
     switch (event.key) {
-      case "ArrowDown":
-        BA();
+      case "s":
+        globalDir = 2;
+        move();
         break;
-      case "ArrowUp":
+      case "w":
         // code for "up arrow" key press.
-        FO();
+        globalDir = 1;
+        move();
         break;
-      case "ArrowLeft":
+      case "a":
         // code for "left arrow" key press.
-        LT();
+        globalDir = 4;
+        move();
         break;
-      case "ArrowRight":
+      case "d":
         // code for "right arrow" key press.
-        RT();
+        globalDir = 3;
+        move();
+        break;
+      case " ":
+        console.log("stopping");
+        globalDir = 0;
+        move();
+        break;
+      case "e":
+        // turn clokwise
+        globalDir = 5;
+        move();
         break;
       case "q":
-        STOP();
+        // turn clokwise
+        globalDir = 6;
+        move();
+        break;
+      case "r":
+        // increase sped by 5
+        if(globalSped < 250) globalSped += 5;
+        spedDisplay.innerHTML = globalSped;
+        slider.value = globalSped;
+        move();
+        break;
+      case "f":
+        // decrese sped by 5
+        if(globalSped > 6) globalSped -= 5;
+        spedDisplay.innerHTML = globalSped;
+        slider.value = globalSped;
+        move();
         break;
       default:
         return; // Quit when this doesn't handle the key event.
