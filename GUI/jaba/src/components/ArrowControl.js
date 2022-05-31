@@ -25,7 +25,7 @@ export default class ArrowControl extends React.Component {
         <ArrowButton Icon="ᐊ" dir='left' onClickFunc = {clickHandler} Class='leftArrow' />
         <ArrowButton Icon="ᐁ" dir='down' onClickFunc = {clickHandler} Class='downArrow' />
         <ArrowButton Icon="ᐅ" dir='right' onClickFunc = {clickHandler} Class='rightArrow' />
-        {/* <ArrowButton Icon="🛑" dir='stop' onClickFunc = {clickHandler} Class='stopButton' /> */}
+        <ArrowButton Icon="🛑" dir='stop' onClickFunc = {clickHandler} Class='stopButton' />
       </div>
     );
   }

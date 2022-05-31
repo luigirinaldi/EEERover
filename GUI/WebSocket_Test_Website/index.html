@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <button onclick="buttonFunc()">Click ME</button>
+  <input type="range" min="0" max="255" value="127" class="slider" id="SpeedControl">
+
+  
+  <script>
+    function buttonFunc(){
+      console.log("Test!");
+    }
+    let roverIP = "http://192.168.205.45";
+    let slider  = document.getElementById("SpeedControl");
+
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {if (this.readyState == 4 && this.status == 200) {document.getElementById("state").innerHTML = this.responseText;}};
+    function FO() {xhttp.open("GET", `${roverIP}/FO`); xhttp.send();}
+    function BA() {xhttp.open("GET", `${roverIP}/BA`); xhttp.send();}
+    function RT() {xhttp.open("GET", `${roverIP}/RT`); xhttp.send();}
+    function LT() {xhttp.open("GET", `${roverIP}/LT`); xhttp.send();}
+    function STOP() {xhttp.open("GET", `${roverIP}/STOP`); xhttp.send();}
+
+    window.addEventListener("keydown", function (event) {
+    if (event.defaultPrevented) {
+      return; // Do nothing if the event was already processed
+    }
+
+    switch (event.key) {
+      case "ArrowDown":
+        BA();
+        break;
+      case "ArrowUp":
+        // code for "up arrow" key press.
+        FO();
+        break;
+      case "ArrowLeft":
+        // code for "left arrow" key press.
+        LT();
+        break;
+      case "ArrowRight":
+        // code for "right arrow" key press.
+        RT();
+        break;
+      case "q":
+        STOP();
+        break;
+      default:
+        return; // Quit when this doesn't handle the key event.
+    }
+
+    // Cancel the default action to avoid it being handled twice
+    event.preventDefault();
+  }, true);
+  // the last option dispatches the event to the listener first,
+  // then dispatches event to window
+  </script>
+</body>
+</html>
