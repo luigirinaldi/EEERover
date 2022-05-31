@@ -1,6 +1,5 @@
 #include <Wire.h>
 
-
 int sped = 255;
 int inputt = 0;
 
@@ -132,25 +131,33 @@ void loop() {
   
   
   if(inputt==1){
-  Serial.println("FO");
-  front(sped, HIGH);
+    Serial.println("FO");
+    front(sped, HIGH);
+  } 
+  else if(inputt==2){
+    Serial.println("BK");
+    front(sped, LOW);
   }
-  if(inputt==2){
-  Serial.println("BK");
-  front(sped, LOW);
+  else if(inputt==3){
+    Serial.println("RT");
+    left(sped, LOW);
   }
-  if(inputt==3){
-  Serial.println("RT");
-  left(sped, LOW);
+  else if(inputt==4){
+    Serial.println("LF");
+    left(sped,HIGH);
   }
-  if(inputt==4){
-  Serial.println("LF");
-  left(sped,HIGH);
+  else if(inputt==0){
+    Serial.println("ST");
+    halt();
   }
-  if(inputt==0){
-  Serial.println("ST");
-  halt();
+  else if (inputt == 5){
+    Serial.println("SCW");
+    clockwise(sped, HIGH);
+  } else if (inputt == 6){
+    Serial.println("SAW");
+    clockwise(sped, LOW);
   }
+  delay(1);
 }
 
 void receiveEvent(){
@@ -169,6 +176,9 @@ void receiveEvent(){
         inputt = i2cdata[2] - '0';
         sped = (i2cdata[4] - '0')*100 + (i2cdata[5] - '0')*10 + (i2cdata[6] - '0')*1;
         Serial.println("Correct data flow");
+        Serial.print(sped);
+        Serial.print("  ");
+        Serial.println(inputt);
       }
     }
   }

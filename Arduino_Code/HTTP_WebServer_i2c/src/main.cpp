@@ -45,8 +45,8 @@
 
 
 // constants
-const char ssid[] = "Redmi Note 10 Pro";
-const char pass[] = "12345s678";
+const char ssid[] = "iPhone di Luigi";
+const char pass[] = "passwordThatsVeryStrong";
 const int groupNumber = 0; // Set your group number to make the IP address constant - only do this on the EEERover network
 
 const int i2c_slave_motor = 4;
@@ -68,12 +68,12 @@ bool getGetValue(const String &argName, String &argValue, const WiFiWebServer &s
   return false;
 }
 
-int getSped(){
+String getSped(){
   String value;
   if (getGetValue("sped", value, server))  {
-    return value.toInt();
+    return value;
   }
-  return 0;
+  return "0";
 }
 
 
@@ -91,25 +91,31 @@ void HandleRoot(){
   Serial.println("Device connected");
 }
 
-const String returnMessages[] = {"STOP", "FO", "BA", "RT", "LT"};
+const String returnMessages[] = {"STOP", "forward", "back", "right", "left", "clockwise", "anticlockwise"};
 
 void HandleMovement(){
   char message[10] = "J00A000B";
-  uint8_t direction = getDir();
+  int direction = getDir();
   if(direction != 0){
-    char spedChar[3]; 
-    sprintf(spedChar, "%0*d", getSped()); //convert to string with leading zeros
-    message[6] = spedChar[2];
-    message[5] = spedChar[1];
-    message[4] = spedChar[0];
-    Serial.println(spedChar);
-    Serial.println(message);
+    String sped = getSped();
+    if(sped.length() == 3) {
+      message[6] = sped.charAt(2);
+      message[5] = sped.charAt(1);
+      message[4] = sped.charAt(0);
+    } else if (sped.length() == 2) {
+      message[6] = sped.charAt(1);
+      message[5] = sped.charAt(0);
+    } else {
+      message[6] = sped.charAt(0);
+    }
 
-    char dirChar[2];
-    sprintf(dirChar, "%0*d", int(direction)); //convert to string with leading zeros
-    Serial.println(dirChar);
-    message[1] = dirChar[0];
-    message[2] = dirChar[1];
+    String dir = String(direction);
+    if(dir.length() == 2){
+      message[2] = dir.charAt(1);
+      message[1] = dir.charAt(0);
+    } else {
+      message[2] = dir.charAt(0);
+    }
   }
 
   Serial.print(F("sending message: "));
@@ -119,7 +125,9 @@ void HandleMovement(){
   Wire.write(message);
   Wire.endTransmission();
 
-  server.send(200, F("text/plain"), returnMessages[direction]);
+  const String returnMessage = returnMessages[direction];
+  Serial.println(returnMessage);
+  server.send(200, F("text/plain"), F("moving"));
 }
 
 // void Forward(){
