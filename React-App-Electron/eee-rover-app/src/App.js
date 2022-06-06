@@ -1,18 +1,22 @@
 import logo from './logo.svg';
+import React from 'react';
 import './App.css';
-import Navbar from './components/Navbar/Navbar';
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import Sidebar from './components/Sidebar';
+
 import Home from './pages/Home';
-import About from './pages/About';
-import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
+
 function App() {
   return (
-    <Router>
-      <Navbar />
-      <Routes>
-        <Route exact path='/' element={<Home />} />
-        <Route path='/about' element={<About />} />
-      </Routes>
-    </Router>
+    <React.Fragment>
+      <Router>
+        <Sidebar />
+
+        <Routes>
+          <Route exact path="/" component={Home} />
+        </Routes>
+      </Router>
+    </React.Fragment>
   );
 }
 
