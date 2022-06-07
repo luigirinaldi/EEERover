@@ -2,14 +2,14 @@ import React from 'react';
 import PageContainer from './PageContainer';
 
 
-const Home = () => {
+const Debug = () => {
   return (
     <PageContainer>
       <div>
-        <h1>Home Page</h1>
+        <h1>Debug Logs</h1>
       </div>
     </PageContainer>
   );
 };
   
-export default Home;
+export default Debug;
