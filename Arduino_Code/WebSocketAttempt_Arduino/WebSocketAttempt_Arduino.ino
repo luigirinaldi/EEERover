@@ -1,11 +1,13 @@
-#define USE_WIFI_NINA         false
-#define USE_WIFI101           true
 
-#define _WEBSOCKETS_LOGLEVEL_     2
-#define WEBSOCKETS_NETWORK_TYPE   NETWORK_WIFI101
+#define WEBSOCKETS_USE_WIFI101           true
+#define WEBSOCKETS_WIFI101_USE_SAMD      true
+#define USE_WIFI101       true
 
-#include <WiFi101.h>
-#include <WebSocketsServer_Generic.h>
+
+
+// #include <WiFi101.h>
+// #include <WiFiWebServer.h>
+#include <WebSockets2_Generic.h>
 
 const char ssid[] = "iPhone di Luigi";
 const char pass[] = "passwordThatsVeryStrong";
@@ -13,8 +15,7 @@ const char pass[] = "passwordThatsVeryStrong";
 const int groupNumber = 15;
 
 // Websocket stuff
-
-WebSocketsServer webSocket = WebSocketsServer(81);
+websockets2_generic::WebsocketsServer sockServer;
 
 int status = WL_IDLE_STATUS;
 
@@ -36,35 +37,6 @@ void printWifiStatus()
 }
 
 
-void webSocketEvent(const uint8_t& num, const WStype_t& type, uint8_t * payload, const size_t& length)
-{
-  (void) length;
-  
-  switch (type)
-  {
-    case WStype_DISCONNECTED:
-      Serial.println( "[" + String(num) + "] Disconnected!");
-      break;
-    case WStype_CONNECTED:
-      {
-        // only for ESP32 apparently
-        // IPAddress ip = webSocket.remoteIP(num);
-        // Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-
-        // send message to client
-        webSocket.sendTXT(num, "Connected");
-      }
-      break;
-    case WStype_TEXT:
-      Serial.println( "[" + String(num) + "] get Text: " + String((char *) payload));
-      break;
-
-    default:
-      break;
-  }
-}
-
-
 void setup() {
   Serial.begin(9600);
 
@@ -81,8 +53,8 @@ void setup() {
  }
 
  //Configure the static IP address if group number is set
- if (groupNumber)
-   WiFi.config(IPAddress(192,168,0,groupNumber+1));
+//  if (groupNumber)
+//    WiFi.config(IPAddress(192,168,0,groupNumber+1));
 
   // attempt to connect to WiFi network
   Serial.print(F("Connecting to WPA SSID: "));
@@ -98,28 +70,35 @@ void setup() {
   Serial.println(F("\nStarting Simple websocket!"));
 
     // start webSocket server
-  webSocket.begin();
-  webSocket.onEvent(webSocketEvent);
-}
+  sockServer.listen(81); //set the port on which the server listens
 
-unsigned long last_10sec = 0;
-unsigned int counter = 0;
+  if(sockServer.available()){
+    Serial.print("Web Socket started at IP: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("Web Socket server failed");
+  }
+
+}
 
 
 void loop() {
-  unsigned long t = millis();
-  webSocket.loop();
-
-  if ((t - last_10sec) > 10 * 1000)
+  websockets2_generic::WebsocketsClient client = sockServer.accept();
+ 
+  if (client.available())
   {
-    counter++;
-    bool ping = (counter % 2);
-    int i = webSocket.connectedClients(ping);
+    websockets2_generic::WebsocketsMessage msg = client.readNonBlocking();
 
-    Serial.println(String(i) + " Connected websocket clients ping: " + String(ping));
+    // log
+    Serial.print("Got Message: ");
+    Serial.println(msg.data());
 
-    last_10sec = millis();
+    // return echo
+    client.send("Echo: " + msg.data());
+
+    // close the connection
+    client.close();
   }
 
-  delay(10);
+  delay(1000);
 }
