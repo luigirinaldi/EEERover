@@ -1,23 +1,23 @@
-import logo from './logo.svg';
+
 import React from 'react';
 import './App.css';
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Sidebar from './components/Sidebar';
-
+import Navbar from './components/Navbar';
+import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import Home from './pages/Home';
+import Debug from './pages/Debug';
+import ErrorLogs from './pages/ErrorLogs';
 
 function App() {
-  return (
-    <React.Fragment>
-      <Router>
-        <Sidebar />
-
-        <Routes>
-          <Route exact path="/" component={Home} />
-        </Routes>
-      </Router>
-    </React.Fragment>
-  );
+return (
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route exact path='/' element={<Home/>} />
+        <Route path='/Debug' element={<Debug/>} />
+        <Route path='/ErrorLogs' element={<ErrorLogs/>} />
+      </Routes>
+    </Router>
+);
 }
-
+  
 export default App;
