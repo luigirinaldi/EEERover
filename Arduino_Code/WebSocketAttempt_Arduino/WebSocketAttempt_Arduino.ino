@@ -2,10 +2,9 @@
 #define USE_WIFI101           true
 
 #define _WEBSOCKETS_LOGLEVEL_     2
-#define WEBSOCKETS_NETWORK_TYPE   NETWORK_WIFININA
+#define WEBSOCKETS_NETWORK_TYPE   NETWORK_WIFI101
 
-#include <Arduino.h>
-// #include <WiFiWebServer.h>
+#include <WiFi101.h>
 #include <WebSocketsServer_Generic.h>
 
 const char ssid[] = "iPhone di Luigi";
@@ -14,8 +13,6 @@ const char pass[] = "passwordThatsVeryStrong";
 const int groupNumber = 15;
 
 // Websocket stuff
-
-// WiFiWebServer server(80);
 
 WebSocketsServer webSocket = WebSocketsServer(81);
 
@@ -71,18 +68,21 @@ void webSocketEvent(const uint8_t& num, const WStype_t& type, uint8_t * payload,
 void setup() {
   Serial.begin(9600);
 
-  while(millis() < 10000); //wait 10 seconds
+  while(!Serial && millis() < 5000); //wait 10 seconds
 
-  //Check WiFi shield is present
-  if (WiFi.status() == WL_NO_SHIELD)
-  {
-    Serial.println(F("WiFi shield not present"));
-    while (true);
-  }
+  Serial.println(F("Starting up!"));
+  Serial.println(WiFi.status());
 
-  //Configure the static IP address if group number is set
-  if (groupNumber)
-    WiFi.config(IPAddress(192,168,0,groupNumber+1));
+ //Check WiFi shield is present
+ if (WiFi.status() == WL_NO_SHIELD)
+ {
+   Serial.println(F("WiFi shield not present"));
+   while (true);
+ }
+
+ //Configure the static IP address if group number is set
+ if (groupNumber)
+   WiFi.config(IPAddress(192,168,0,groupNumber+1));
 
   // attempt to connect to WiFi network
   Serial.print(F("Connecting to WPA SSID: "));
@@ -120,4 +120,6 @@ void loop() {
 
     last_10sec = millis();
   }
+
+  delay(10);
 }
