@@ -3,12 +3,19 @@ import PageContainer from './PageContainer';
 
 const HTTPButton = () => {
   async function HttpRequest(){
-    let response = await fetch('http://172.20.10.7/move?dir=2&sped=255', {
+    fetch('http://172.20.10.7/move?dir=1&sped=23', {
       method: 'GET',
-      mode: 'cors',
+      // mode: 'cors',
+      Host: `http://${window.location.host}/`,
+      Origin: 'http://172.20.10.7/',
+      'Referrer-Policy': 'origin-when-cross-origin',
+    })
+    .then(response => response.text())
+    .then((dataStr) => {
+      console.log(dataStr);
     });
 
-    console.log(response.json);
+    // console.log(response.body);
   }
   
   
