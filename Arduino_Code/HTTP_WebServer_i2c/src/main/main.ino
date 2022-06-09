@@ -45,8 +45,8 @@
 
 
 // constants
-const char ssid[] = "iPhone di Luigi";
-const char pass[] = "passwordThatsVeryStrong";
+const char ssid[] = "Bfyvhygydnn";
+const char pass[] = "dogsandcats";
 const int groupNumber = 0; // Set your group number to make the IP address constant - only do this on the EEERover network
 
 const int i2c_slave_motor = 4;
@@ -125,8 +125,14 @@ void HandleMovement(){
   Wire.write(message);
   Wire.endTransmission();
 
+
   const String returnMessage = returnMessages[direction];
   Serial.println(returnMessage);
+
+  WifiClient client();
+  WifiClient.beginRequest();
+  
+  WifiClient.sendHeader();
   server.send(200, F("text/plain"), F("moving"));
 }
 
