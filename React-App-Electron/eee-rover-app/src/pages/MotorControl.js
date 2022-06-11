@@ -1,6 +1,12 @@
 import React from 'react';
 import PageContainer from './PageContainer';
 import ArrowControl from '../components/ArrowControl';
+import { useContext } from 'react';
+import { IpContext } from '../context/ip-context';
+
+import '../css/motorControl.css';
+import DebugOutput from '../components/DebugOutput';
+
 
 const directionToCode = {
   'up':1,
@@ -58,15 +64,13 @@ class DiscreteControl extends React.Component {
   move(){
     if(this.dir < 7 && this.sped < 256 && this.sped >= 0){
 
-      let urlencodedBody = new URLSearchParams({
-        "dir": String(this.dir).padStart(2, '0'),
-        "sped": String(this.sped).padStart(3, '0'),
-      });
+      // message to control motors encoded in J__A___B format
+      let msg = 'J' + String(this.dir).padStart(2, '0') + 'A' + String(this.sped).padStart(3, '0') + 'B';
 
       fetch(this.destinationURL + "move", {
         method: 'POST',
-        body: urlencodedBody,
-        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: msg,
+        headers: {"Content-Type": "text/plain"},
         mode: 'cors',
         Host: `http://${window.location.host}/`,
         Origin: this.destinationURL,
@@ -84,6 +88,7 @@ class DiscreteControl extends React.Component {
   updateResponse(response){
     this.setState({requestResponse: response + this.state.requestResponse +  '\n'});
   }
+
   testConnection(){
     fetch(this.destinationURL, {
       method: 'GET',
@@ -145,7 +150,6 @@ class DiscreteControl extends React.Component {
     return(
       <div onKeyDown={this.handleKeyDown} onKeyUp={this.handleKeyUp} ref={ref => this.myDiv = ref}> 
         <ArrowControl clickHandler={this.handleDirectionChange}/>
-        {'\n'}
         <button onClick={this.testConnection} >
           Test Connection
         </button>
@@ -154,60 +158,31 @@ class DiscreteControl extends React.Component {
         </h3>
         <div style={{whiteSpace: 'pre-wrap'}}>
           {requestResponse}
-          {'\n'}
         </div>
       </div>
     );
   }
 }
 
-class MotorControl extends React.Component {
 
-  // TODO add option to change IP
-  constructor(props){
-    super(props);
-    this.state = {
-      RoverIP: "172.20.10.3"
-    };
-
-    this.tmpRoverIP = "172.20.10.3";
-
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-  }
-
-  handleChange(event) {
-    this.tmpRoverIP = event.target.value;
-  }
-
-  handleSubmit(event) {
-    console.log("Changing IP from " + this.state.RoverIP +" to " + this.tmpRoverIP);
-    this.setState({RoverIP: this.tmpRoverIP});
-    event.preventDefault();
-  }
-
-  render() {
-    return(
-      <PageContainer>
-      <div>
-        <h1>Motor Control</h1>
-        <div>
-          <form onSubmit={this.handleSubmit}>
-            <strong>Set ip</strong>
-            
-            <textarea 
-                value={this.state.tmpRoverIP}
-                onChange={this.handleChange} />
-              
-            <input type="submit" value="Change IP" />
-          </form>
+function MotorControl() {
+  const { roverIP } = useContext(IpContext);
+  return(            
+    <PageContainer title="Motor Control">   
+      <div className='Grid-Container'>
+        <div className='row1'>
+          <DiscreteControl roverIP={roverIP} />
         </div>
-       
-        <DiscreteControl roverIP={this.state.RoverIP} />
+        <div className='row2'>
+          {/* <p> Current Ip : {roverIP}</p>             */}
+          <DebugOutput />
+        </div>
+        <div className='row3'>
+
+        </div>
       </div>
-    </PageContainer>
-    );
-  }
+    </PageContainer>     
+  );
 }
   
 export default MotorControl;

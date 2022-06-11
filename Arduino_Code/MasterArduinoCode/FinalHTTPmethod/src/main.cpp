@@ -1,5 +1,6 @@
 #define USE_WIFI_NINA         false
 #define USE_WIFI101           true
+
 #include <WiFiWebServer.h>
 #include <Wire.h>
 
@@ -7,7 +8,7 @@
 // constants
 const char ssid[] = "iPhone di Luigi";
 const char pass[] = "passwordThatsVeryStrong";
-const int groupNumber = 0; // Set your group number to make the IP address constant - only do this on the EEERover network
+const int groupNumber = 15; // Set your group number to make the IP address constant - only do this on the EEERover network
 
 const int i2c_slave_motor = 4;
 
@@ -15,36 +16,6 @@ WiFiWebServer server(80);
 
 // GLOBALS
 // int sped = 200;
-
-// given a server objects, scans the arguments for GET arg "argName" storing value in "argValues"
-// returns true if arg is found
-bool getGetValue(const String &argName, String &argValue, const WiFiWebServer &s){
-  for(uint8_t i = 0; i < server.args(); i++){
-    if(server.argName(i) == argName){
-      argValue = server.arg(i);
-      return true;
-    }
-  }
-  return false;
-}
-
-String getSped(){
-  String value;
-  if (getGetValue("sped", value, server))  {
-    return value;
-  }
-  return "0";
-}
-
-
-// might be redundant
-uint8_t getDir(){
-  String value;
-  if(getGetValue("dir", value, server)){
-    return value.toInt();
-  }
-  return 0; //defualt return value
-}
 
 void HandleRoot(){
   WiFiClient current_client = server.client();
@@ -68,35 +39,40 @@ void HandleMovement(){
   WiFiClient currentClient = server.client();
 
   if(server.method() == HTTP_POST){
-    if(server.hasArg()){ 
-      String message = server.argName(0) + ": " + server.arg(0) + ", " + server.argName(1) + ": " + server.arg(1); //print post args
-      Serial.println(message);
-      uint8_t direction = (server.arg(0)[1] - '0') + (server.arg(0)[0] - '0')*10;
-      uint8_t sped =  (server.arg(1)[2] - '0') + (server.arg(1)[1] - '0')*10 + (server.arg(1)[0] - '0')*100;
 
-      // Serial.println(direction + " " + sped);
+		Serial.write('"');
+		Serial.print(server.arg("plain"));
+		Serial.println('"');
 
+		char postBody[9];
+		server.arg("plain").toCharArray(postBody, 9);
+		Serial.println(postBody);
+    if(postBody[0] == 'J' && postBody[3] == 'A' && postBody[7] == 'B'){ // check if body in correct format 
+			//send data to slave arduino
+			Wire.beginTransmission(i2c_slave_motor);
+			Wire.write(postBody);
+			Wire.endTransmission();
+
+			// successfull request
       currentClient.print(
         "HTTP/1.1 200 \r\n"
         "Content-Type: text/plain\r\n"
         "Access-Control-Allow-origin: *\r\n"
         "Connection: Keep-Alive\r\n"  // the connection will be closed after completion of the response
       "\r\n");
-      String returnMessage = "dir=" + String(direction) + "\nsped=" + String(sped);
-      currentClient.print(returnMessage);
       currentClient.stop();
 
-    } else {
+    } else { //wrong argument format
       currentClient.print(
-        "HTTP/1.1 405 \r\n"
+        "HTTP/1.1 400 \r\n"
         "Content-Type: text/plain\r\n"
         "Access-Control-Allow-origin: *\r\n"
         "Connection: close\r\n"  // the connection will be closed after completion of the response
       "\r\n");
-      currentClient.print(F("Too few args"));
+      currentClient.print(F("Bad Request: Wrong message format"));
       currentClient.stop();
     }
-  } else {
+  } else { //wrong request format
     currentClient.print(
       "HTTP/1.1 405 Method Not Allowed\r\n"
       "Content-Type: text/plain\r\n"
@@ -106,56 +82,6 @@ void HandleMovement(){
     currentClient.print(F("Method Not Allowed"));
     currentClient.stop();
   }
-//   char message[10] = "J00A000B";
-//   int direction = getDir();
-//   if(direction != 0){
-//     String sped = getSped();
-//     if(sped.length() == 3) {
-//       message[6] = sped.charAt(2);
-//       message[5] = sped.charAt(1);
-//       message[4] = sped.charAt(0);
-//     } else if (sped.length() == 2) {
-//       message[6] = sped.charAt(1);
-//       message[5] = sped.charAt(0);
-//     } else {
-//       message[6] = sped.charAt(0);
-//     }
-
-//     String dir = String(direction);
-//     if(dir.length() == 2){
-//       message[2] = dir.charAt(1);
-//       message[1] = dir.charAt(0);
-//     } else {
-//       message[2] = dir.charAt(0);
-//     }
-//   }
-
-//   Serial.print(F("sending message: "));
-//   Serial.println(message);
-
-//   Wire.beginTransmission(i2c_slave_motor);
-//   Wire.write(message);
-//   Wire.endTransmission();
-
-
-//   const String returnMessage = returnMessages[direction];
-//   Serial.println(returnMessage);
-
-//   WiFiClient current_client = server.client();
-//   current_client.print(
-//   "HTTP/1.1 200 OK\r\n"
-//   "Content-Type: text/plain\r\n"
-//   "Access-Control-Allow-origin: *\r\n"
-//   "Connection: close\r\n"  // the connection will be closed after completion of the response
-// //  "Keep-Alive: timeout=60, max=1000\r\n"
-//   "Server: AYO\r\n"
-//   "\r\n");
-//   current_client.print(F("Moving\r\n"));
-//   current_client.print(message);
-//   current_client.print(F("\r\n"));
-//   //server.send(200, F("text/plain"), F("Hello, you have connected to JABA rover"));
-//   Serial.println("Handling Movement");
-//   current_client.stop();}
 }
 
 //Generate a 404 response with details of the failed request
@@ -197,10 +123,10 @@ void setup()
     while (true);
   }
 
-  //Configure the static IP address if group number is set
-  // if (groupNumber){
-  //   WiFi.config(IPAddress(192,168,0,groupNumber+1));
-  // }
+  // Configure the static IP address if group number is set
+  if (ssid == "EEERover" && groupNumber){
+    WiFi.config(IPAddress(192,168,0,groupNumber+1));
+  }
 
   // attempt to connect to WiFi network
   Serial.print(F("Connecting to WPA SSID: "));

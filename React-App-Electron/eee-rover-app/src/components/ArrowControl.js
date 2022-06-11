@@ -1,5 +1,5 @@
 import React from 'react';
-import './ArrowControl.css';
+import '../css/ArrowControl.css';
 
 function ArrowButton(props) {
   return (
@@ -10,11 +10,6 @@ function ArrowButton(props) {
 }
 
 export default class ArrowControl extends React.Component { 
-
-  constructor(props){
-    super(props);
-    console.log(props);
-  }
 
   render() {
     return (

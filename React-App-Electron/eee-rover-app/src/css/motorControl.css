@@ -1,0 +1,26 @@
+.Grid-Container {
+  height: 100%;
+  width: 100%;
+  
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr;
+  grid-template-areas: "row1 row2 row3";
+}
+
+.Grid-Container > .row1 {
+  grid-area: row1;
+  display: flex;
+}
+
+.Grid-Container > .row2 {
+  grid-area: row2;
+  display: flex;
+}
+
+.Grid-Container > .row3 {
+  grid-area: row3;
+  display: flex;
+}
+
