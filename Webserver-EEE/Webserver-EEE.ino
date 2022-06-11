@@ -45,8 +45,8 @@
 
 
 // constants
-const char ssid[] = "iPhone di Luigi";
-const char pass[] = "passwordThatsVeryStrong";
+const char ssid[] = "Bfyvhygydnn";
+const char pass[] = "dogsandcats";
 const int groupNumber = 0; // Set your group number to make the IP address constant - only do this on the EEERover network
 
 const int i2c_slave_motor = 4;
@@ -87,8 +87,19 @@ uint8_t getDir(){
 }
 
 void HandleRoot(){
-  server.send(200, F("text/plain"), F("Hello, you have connected to JABA rover"));
+  WiFiClient current_client = server.client();
+  current_client.print(
+  "HTTP/1.1 200 OK\r\n"
+  "Content-Type: text/plain\r\n"
+  "Access-Control-Allow-origin: *\r\n"
+  "Connection: Keep-Alive\r\n"  // the connection will be closed after completion of the response
+  "Keep-Alive: timeout=60, max=1000\r\n"
+  "Server: AYO\r\n"
+  "\r\n");
+  current_client.print(F("YOUR MOM\r\n"));
+  //server.send(200, F("text/plain"), F("Hello, you have connected to JABA rover"));
   Serial.println("Device connected");
+  current_client.stop();
 }
 
 const String returnMessages[] = {"STOP", "forward", "back", "right", "left", "clockwise", "anticlockwise"};
@@ -125,10 +136,25 @@ void HandleMovement(){
   Wire.write(message);
   Wire.endTransmission();
 
+
   const String returnMessage = returnMessages[direction];
   Serial.println(returnMessage);
-  server.send(200, F("text/plain"), F("moving"));
-}
+
+  WiFiClient current_client = server.client();
+  current_client.print(
+  "HTTP/1.1 200 OK\r\n"
+  "Content-Type: text/plain\r\n"
+  "Access-Control-Allow-origin: *\r\n"
+  "Connection: close\r\n"  // the connection will be closed after completion of the response
+//  "Keep-Alive: timeout=60, max=1000\r\n"
+  "Server: AYO\r\n"
+  "\r\n");
+  current_client.print(F("Moving\r\n"));
+  current_client.print(message);
+  current_client.print(F("\r\n"));
+  //server.send(200, F("text/plain"), F("Hello, you have connected to JABA rover"));
+  Serial.println("Handling Movement");
+  current_client.stop();}
 
 // void Forward(){
 //   // forward 1, back 2, right 3, left 4, stop 0 (third bit, second after J)

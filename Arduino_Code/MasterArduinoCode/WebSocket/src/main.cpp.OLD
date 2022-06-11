@@ -1,11 +1,24 @@
-
+#define USE_WIFI_NINA         false
+#define USE_WIFI101           true
 #define WEBSOCKETS_USE_WIFI101           true
 #define WEBSOCKETS_WIFI101_USE_SAMD      true
-#define USE_WIFI101       true
 
-// #include <WiFi101.h>
-// #include <WiFiWebServer.h>
+#define DEBUG_WEBSOCKETS_PORT     Serial
+// Debug Level from 0 to 4
+#define _WEBSOCKETS_LOGLEVEL_     3
+
+#define BOARD_TYPE      "SAMD21 ADAFRUIT_METRO_M0_EXPRESS"
+#define BOARD_NAME BOARD_TYPE
+#define ADAFRUIT_METRO_M0_EXPRESS true
+
+#define WEBSOCKETS
+
+
 #include <WebSockets2_Generic.h>
+#include <driver/source/nmasic.h>
+
+using namespace websockets2_generic;
+
 
 const char ssid[] = "iPhone di Luigi";
 const char pass[] = "passwordThatsVeryStrong";
@@ -13,7 +26,8 @@ const char pass[] = "passwordThatsVeryStrong";
 const int groupNumber = 15;
 
 // Websocket stuff
-websockets2_generic::WebsocketsServer sockServer;
+
+WebsocketsServer server;
 
 int status = WL_IDLE_STATUS;
 
@@ -40,6 +54,9 @@ void setup() {
 
   while(!Serial && millis() < 5000); //wait 10 seconds
 
+
+  Serial.println("\nStarting SAMD_WiFi101-Server with WiFi101 on " + String(BOARD_NAME));
+  Serial.println(WEBSOCKETS2_GENERIC_VERSION);
   Serial.println(F("Starting up!"));
   Serial.println(WiFi.status());
 
@@ -65,27 +82,27 @@ void setup() {
 
   printWifiStatus();
 
-  Serial.println(F("\nStarting Simple websocket!"));
+  Serial.println(F("\nStarting Simple websocket on port 81!"));
 
-    // start webSocket server
-  sockServer.listen(81); //set the port on which the server listens
-
-  if(sockServer.available()){
-    Serial.print("Web Socket started at IP: ");
-    Serial.println(WiFi.localIP());
+  //   // start webSocket server
+  // webSocket.begin();
+  // webSocket.onEvent(webSocketEvent);
+  server.listen(81);
+  delay(1000);
+  if(server.available()){
+    Serial.println("Server successfully started");
   } else {
-    Serial.println("Web Socket server failed");
+    Serial.println("Server failed to start");
   }
 
 }
 
-
 void loop() {
-  websockets2_generic::WebsocketsClient client = sockServer.accept();
+  WebsocketsClient client = server.accept();
  
   if (client.available())
   {
-    websockets2_generic::WebsocketsMessage msg = client.readNonBlocking();
+    WebsocketsMessage msg = client.readNonBlocking();
 
     // log
     Serial.print("Got Message: ");
