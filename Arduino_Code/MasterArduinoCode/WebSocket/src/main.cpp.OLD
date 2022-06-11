@@ -1,0 +1,119 @@
+#define USE_WIFI_NINA         false
+#define USE_WIFI101           true
+#define WEBSOCKETS_USE_WIFI101           true
+#define WEBSOCKETS_WIFI101_USE_SAMD      true
+
+#define DEBUG_WEBSOCKETS_PORT     Serial
+// Debug Level from 0 to 4
+#define _WEBSOCKETS_LOGLEVEL_     3
+
+#define BOARD_TYPE      "SAMD21 ADAFRUIT_METRO_M0_EXPRESS"
+#define BOARD_NAME BOARD_TYPE
+#define ADAFRUIT_METRO_M0_EXPRESS true
+
+#define WEBSOCKETS
+
+
+#include <WebSockets2_Generic.h>
+#include <driver/source/nmasic.h>
+
+using namespace websockets2_generic;
+
+
+const char ssid[] = "iPhone di Luigi";
+const char pass[] = "passwordThatsVeryStrong";
+
+const int groupNumber = 15;
+
+// Websocket stuff
+
+WebsocketsServer server;
+
+int status = WL_IDLE_STATUS;
+
+void printWifiStatus()
+{
+  // print the SSID of the network you're attached to:
+  // you're connected now, so print out the data
+  Serial.print(F("You're connected to the network, IP = "));
+  Serial.println(static_cast<IPAddress>(WiFi.localIP()));
+
+  Serial.print(F("SSID: "));
+  Serial.print(WiFi.SSID());
+
+  // print the received signal strength:
+  int32_t rssi = WiFi.RSSI();
+  Serial.print(F(", Signal strength (RSSI):"));
+  Serial.print(rssi);
+  Serial.println(F(" dBm"));
+}
+
+
+void setup() {
+  Serial.begin(9600);
+
+  while(!Serial && millis() < 5000); //wait 10 seconds
+
+
+  Serial.println("\nStarting SAMD_WiFi101-Server with WiFi101 on " + String(BOARD_NAME));
+  Serial.println(WEBSOCKETS2_GENERIC_VERSION);
+  Serial.println(F("Starting up!"));
+  Serial.println(WiFi.status());
+
+ //Check WiFi shield is present
+ if (WiFi.status() == WL_NO_SHIELD)
+ {
+   Serial.println(F("WiFi shield not present"));
+   while (true);
+ }
+
+ //Configure the static IP address if group number is set
+//  if (groupNumber)
+//    WiFi.config(IPAddress(192,168,0,groupNumber+1));
+
+  // attempt to connect to WiFi network
+  Serial.print(F("Connecting to WPA SSID: "));
+  Serial.println(ssid);
+  while (WiFi.begin(ssid, pass) != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print('.');
+  }
+
+  printWifiStatus();
+
+  Serial.println(F("\nStarting Simple websocket on port 81!"));
+
+  //   // start webSocket server
+  // webSocket.begin();
+  // webSocket.onEvent(webSocketEvent);
+  server.listen(81);
+  delay(1000);
+  if(server.available()){
+    Serial.println("Server successfully started");
+  } else {
+    Serial.println("Server failed to start");
+  }
+
+}
+
+void loop() {
+  WebsocketsClient client = server.accept();
+ 
+  if (client.available())
+  {
+    WebsocketsMessage msg = client.readNonBlocking();
+
+    // log
+    Serial.print("Got Message: ");
+    Serial.println(msg.data());
+
+    // return echo
+    client.send("Echo: " + msg.data());
+
+    // close the connection
+    client.close();
+  }
+
+  delay(1000);
+}

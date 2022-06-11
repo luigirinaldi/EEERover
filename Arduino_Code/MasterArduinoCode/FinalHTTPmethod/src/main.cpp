@@ -65,140 +65,98 @@ void HandleRoot(){
 const String returnMessages[] = {"STOP", "forward", "back", "right", "left", "clockwise", "anticlockwise"};
 
 void HandleMovement(){
-  char message[10] = "J00A000B";
-  int direction = getDir();
-  if(direction != 0){
-    String sped = getSped();
-    if(sped.length() == 3) {
-      message[6] = sped.charAt(2);
-      message[5] = sped.charAt(1);
-      message[4] = sped.charAt(0);
-    } else if (sped.length() == 2) {
-      message[6] = sped.charAt(1);
-      message[5] = sped.charAt(0);
-    } else {
-      message[6] = sped.charAt(0);
-    }
+  WiFiClient currentClient = server.client();
 
-    String dir = String(direction);
-    if(dir.length() == 2){
-      message[2] = dir.charAt(1);
-      message[1] = dir.charAt(0);
+  if(server.method() == HTTP_POST){
+    if(server.hasArg()){ 
+      String message = server.argName(0) + ": " + server.arg(0) + ", " + server.argName(1) + ": " + server.arg(1); //print post args
+      Serial.println(message);
+      uint8_t direction = (server.arg(0)[1] - '0') + (server.arg(0)[0] - '0')*10;
+      uint8_t sped =  (server.arg(1)[2] - '0') + (server.arg(1)[1] - '0')*10 + (server.arg(1)[0] - '0')*100;
+
+      // Serial.println(direction + " " + sped);
+
+      currentClient.print(
+        "HTTP/1.1 200 \r\n"
+        "Content-Type: text/plain\r\n"
+        "Access-Control-Allow-origin: *\r\n"
+        "Connection: Keep-Alive\r\n"  // the connection will be closed after completion of the response
+      "\r\n");
+      String returnMessage = "dir=" + String(direction) + "\nsped=" + String(sped);
+      currentClient.print(returnMessage);
+      currentClient.stop();
+
     } else {
-      message[2] = dir.charAt(0);
+      currentClient.print(
+        "HTTP/1.1 405 \r\n"
+        "Content-Type: text/plain\r\n"
+        "Access-Control-Allow-origin: *\r\n"
+        "Connection: close\r\n"  // the connection will be closed after completion of the response
+      "\r\n");
+      currentClient.print(F("Too few args"));
+      currentClient.stop();
     }
+  } else {
+    currentClient.print(
+      "HTTP/1.1 405 Method Not Allowed\r\n"
+      "Content-Type: text/plain\r\n"
+      "Access-Control-Allow-origin: *\r\n"
+      "Connection: close\r\n"  // the connection will be closed after completion of the response
+    "\r\n");
+    currentClient.print(F("Method Not Allowed"));
+    currentClient.stop();
   }
+//   char message[10] = "J00A000B";
+//   int direction = getDir();
+//   if(direction != 0){
+//     String sped = getSped();
+//     if(sped.length() == 3) {
+//       message[6] = sped.charAt(2);
+//       message[5] = sped.charAt(1);
+//       message[4] = sped.charAt(0);
+//     } else if (sped.length() == 2) {
+//       message[6] = sped.charAt(1);
+//       message[5] = sped.charAt(0);
+//     } else {
+//       message[6] = sped.charAt(0);
+//     }
 
-  Serial.print(F("sending message: "));
-  Serial.println(message);
+//     String dir = String(direction);
+//     if(dir.length() == 2){
+//       message[2] = dir.charAt(1);
+//       message[1] = dir.charAt(0);
+//     } else {
+//       message[2] = dir.charAt(0);
+//     }
+//   }
 
-  Wire.beginTransmission(i2c_slave_motor);
-  Wire.write(message);
-  Wire.endTransmission();
-
-
-  const String returnMessage = returnMessages[direction];
-  Serial.println(returnMessage);
-
-  WiFiClient current_client = server.client();
-  current_client.print(
-  "HTTP/1.1 200 OK\r\n"
-  "Content-Type: text/plain\r\n"
-  "Access-Control-Allow-origin: *\r\n"
-  "Connection: close\r\n"  // the connection will be closed after completion of the response
-//  "Keep-Alive: timeout=60, max=1000\r\n"
-  "Server: AYO\r\n"
-  "\r\n");
-  current_client.print(F("Moving\r\n"));
-  current_client.print(message);
-  current_client.print(F("\r\n"));
-  //server.send(200, F("text/plain"), F("Hello, you have connected to JABA rover"));
-  Serial.println("Handling Movement");
-  current_client.stop();}
-
-// void Forward(){
-//   // forward 1, back 2, right 3, left 4, stop 0 (third bit, second after J)
-//   char message[10] = "J01A000B";
-//   char spedChar[3]; 
-//   String(sped).toCharArray(spedChar, 3);
-//   message[6] = spedChar[2];
-//   message[5] = spedChar[1];
-//   message[4] = spedChar[0]; 
+//   Serial.print(F("sending message: "));
+//   Serial.println(message);
 
 //   Wire.beginTransmission(i2c_slave_motor);
-//   Wire.write(message, 8);
+//   Wire.write(message);
 //   Wire.endTransmission();
 
-//   server.send(200, F("text/plain"), F("FO"));
 
-//   Serial.println("Forward");
-// }
+//   const String returnMessage = returnMessages[direction];
+//   Serial.println(returnMessage);
 
-// void Back(){
-//   // forward 1, back 2, right 3, left 4, stop 0 (third bit, second after J)
-//   char message[9] = "J02A000B";
-//   char spedChar[3]; 
-//   String(sped).toCharArray(spedChar, 3);
-//   message[6] = spedChar[2];
-//   message[5] = spedChar[1];
-//   message[4] = spedChar[0]; 
-
-//   Wire.beginTransmission(i2c_slave_motor);
-//   Wire.write(message, 8);
-//   Wire.endTransmission(i2c_slave_motor);
-
-//   server.send(200, F("text/plain"), F("BA"));
-
-//     Serial.println("Back");
-// }
-
-// void Right(){
-//   // forward 1, back 2, right 3, left 4, stop 0 (third bit, second after J)
-//   char message[10] = "J03A000B";
-//   char spedChar[3]; 
-//   String(sped).toCharArray(spedChar, 3);
-//   message[6] = spedChar[2];
-//   message[5] = spedChar[1];
-//   message[4] = spedChar[0]; 
-
-//   Wire.beginTransmission(i2c_slave_motor);
-//   Wire.write(message, 8);
-//     Wire.endTransmission(i2c_slave_motor);
-
-
-//   server.send(200, F("text/plain"), F("RT"));
-//   Serial.println("Right");
-// }
-
-// void Left(){
-//   // forward 1, back 2, right 3, left 4, stop 0 (third bit, second after J)
-//   char message[10] = "J04A000B";
-//   char spedChar[3]; 
-//   String(sped).toCharArray(spedChar, 3);
-//   message[6] = spedChar[2];
-//   message[5] = spedChar[1];
-//   message[4] = spedChar[0]; 
-
-//   Wire.beginTransmission(i2c_slave_motor);
-//   Wire.write(message, 8);
-//   Wire.endTransmission(i2c_slave_motor);
-
-
-//   server.send(200, F("text/plain"), F("LT"));
-//     Serial.println("Left");
-// }
-
-// void Stop(){
-//   // forward 1, back 2, right 3, left 4, stop 0 (third bit, second after J)
-//   char message[10] = "J00A000B";
-
-//   Wire.beginTransmission(i2c_slave_motor);
-//   Wire.write(message, 8);
-//   Wire.endTransmission(i2c_slave_motor);
-
-//   server.send(200, F("text/plain"), F("STOP"));
-//   Serial.println("Stop");
-// }
+//   WiFiClient current_client = server.client();
+//   current_client.print(
+//   "HTTP/1.1 200 OK\r\n"
+//   "Content-Type: text/plain\r\n"
+//   "Access-Control-Allow-origin: *\r\n"
+//   "Connection: close\r\n"  // the connection will be closed after completion of the response
+// //  "Keep-Alive: timeout=60, max=1000\r\n"
+//   "Server: AYO\r\n"
+//   "\r\n");
+//   current_client.print(F("Moving\r\n"));
+//   current_client.print(message);
+//   current_client.print(F("\r\n"));
+//   //server.send(200, F("text/plain"), F("Hello, you have connected to JABA rover"));
+//   Serial.println("Handling Movement");
+//   current_client.stop();}
+}
 
 //Generate a 404 response with details of the failed request
 void handleNotFound()

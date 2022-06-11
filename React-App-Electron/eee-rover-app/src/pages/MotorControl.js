@@ -39,6 +39,7 @@ class DiscreteControl extends React.Component {
 
     this.prevKey = ''; // use to only execute one thing per keypress
 
+    this.destinationIP = props.roverIP;
     this.destinationURL = "http://" + props.roverIP + "/";
 
     // not sure if all of this is needed
@@ -56,9 +57,16 @@ class DiscreteControl extends React.Component {
 
   move(){
     if(this.dir < 7 && this.sped < 256 && this.sped >= 0){
-      let requestURL = this.destinationURL + "move?dir=" + this.dir + "&sped=" + this.sped;
-      fetch(requestURL, {
-        method: 'GET',
+
+      let urlencodedBody = new URLSearchParams({
+        "dir": String(this.dir).padStart(2, '0'),
+        "sped": String(this.sped).padStart(3, '0'),
+      });
+
+      fetch(this.destinationURL + "move", {
+        method: 'POST',
+        body: urlencodedBody,
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
         mode: 'cors',
         Host: `http://${window.location.host}/`,
         Origin: this.destinationURL,
@@ -76,7 +84,6 @@ class DiscreteControl extends React.Component {
   updateResponse(response){
     this.setState({requestResponse: response + this.state.requestResponse +  '\n'});
   }
-
   testConnection(){
     fetch(this.destinationURL, {
       method: 'GET',
@@ -160,10 +167,10 @@ class MotorControl extends React.Component {
   constructor(props){
     super(props);
     this.state = {
-      RoverIP: "172.20.10.2"
+      RoverIP: "172.20.10.3"
     };
 
-    this.tmpRoverIP = "172.20.10.2";
+    this.tmpRoverIP = "172.20.10.3";
 
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
