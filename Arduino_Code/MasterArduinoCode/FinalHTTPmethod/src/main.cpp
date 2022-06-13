@@ -16,10 +16,12 @@ WiFiWebServer server(80);
 
 // GLOBALS
 // int sped = 200;
+WiFiClient currentClient;
+
 
 void HandleRoot(){
-  WiFiClient current_client = server.client();
-  current_client.print(
+  currentClient = server.client();
+  currentClient.print(
   "HTTP/1.1 200 OK\r\n"
   "Content-Type: text/plain\r\n"
   "Access-Control-Allow-origin: *\r\n"
@@ -27,42 +29,62 @@ void HandleRoot(){
   "Keep-Alive: timeout=60, max=1000\r\n"
   "Server: AYO\r\n"
   "\r\n");
-  current_client.print(F("YOUR MOM\r\n"));
-  //server.send(200, F("text/plain"), F("Hello, you have connected to JABA rover"));
+  currentClient.print(F("Connected to JABA Rover\r\n"));
+  currentClient.stop();
   Serial.println("Device connected");
-  current_client.stop();
 }
 
 const String returnMessages[] = {"STOP", "forward", "back", "right", "left", "clockwise", "anticlockwise"};
 
 void HandleMovement(){
-  WiFiClient currentClient = server.client();
+  currentClient = server.client();
 
   if(server.method() == HTTP_POST){
 
-		Serial.write('"');
-		Serial.print(server.arg("plain"));
-		Serial.println('"');
-
-		char postBody[9];
-		server.arg("plain").toCharArray(postBody, 9);
-		Serial.println(postBody);
-    if(postBody[0] == 'J' && postBody[3] == 'A' && postBody[7] == 'B'){ // check if body in correct format 
+		
+		
+    if(server.arg("plain")[0] == 'J' && server.arg("plain")[3] == 'A' && server.arg("plain")[7] == 'B'){ // check if body in correct format 
+			char postBody[9];
+			server.arg("plain").toCharArray(postBody, 9);
+			
 			//send data to slave arduino
 			Wire.beginTransmission(i2c_slave_motor);
 			Wire.write(postBody);
 			Wire.endTransmission();
+			// Serial.println(F("Data sent to motor controller"));
 
-			// successfull request
       currentClient.print(
         "HTTP/1.1 200 \r\n"
         "Content-Type: text/plain\r\n"
         "Access-Control-Allow-origin: *\r\n"
         "Connection: Keep-Alive\r\n"  // the connection will be closed after completion of the response
       "\r\n");
+			currentClient.print(F("Success\n"));
+			currentClient.print(postBody);
       currentClient.stop();
 
-    } else { //wrong argument format
+			// Serial.println(F("Movement Data correct"));
+    } else if(server.arg("plain")[0] == 'J' && server.arg("plain")[4] == 'A' && server.arg("plain")[14] == 'B'){ 
+			char postBody[16];
+			server.arg("plain").toCharArray(postBody, 16);
+
+			//send data to slave arduino
+			Wire.beginTransmission(i2c_slave_motor);
+			Wire.write(postBody);
+			Wire.endTransmission();
+			// Serial.println(F("Data sent to motor controller"));
+
+      currentClient.print(
+        "HTTP/1.1 200 \r\n"
+        "Content-Type: text/plain\r\n"
+        "Access-Control-Allow-origin: *\r\n"
+        "Connection: Keep-Alive\r\n"  // the connection will be closed after completion of the response
+      "\r\n");
+			currentClient.print(F("Success\n"));
+			currentClient.print(postBody);
+      currentClient.stop();
+
+		} else { //wrong argument format
       currentClient.print(
         "HTTP/1.1 400 \r\n"
         "Content-Type: text/plain\r\n"
@@ -71,6 +93,8 @@ void HandleMovement(){
       "\r\n");
       currentClient.print(F("Bad Request: Wrong message format"));
       currentClient.stop();
+
+			Serial.println(F("Incorrect movememnt data"));
     }
   } else { //wrong request format
     currentClient.print(
@@ -81,6 +105,8 @@ void HandleMovement(){
     "\r\n");
     currentClient.print(F("Method Not Allowed"));
     currentClient.stop();
+
+		Serial.println(F("Incorrect method"));
   }
 }
 
@@ -99,6 +125,7 @@ void handleNotFound()
   {
     message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
   }
+
   server.send(404, F("text/plain"), message);
 }
 

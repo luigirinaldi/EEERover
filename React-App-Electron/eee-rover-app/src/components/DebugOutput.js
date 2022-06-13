@@ -1,35 +1,116 @@
 import React from "react";
 import styled from "styled-components";
 
-export const containerDiv = styled.div`
-  border: thin solid #DF1463;
-  background-color: #15232e; 
-`;
-
-export const titleDiv = styled.div`
-  border-radius: 24px 24px 0 0;
-  border: thin solid #DF1463;
-  background-color: #15232e; 
-`;
-
-export const contentDiv = styled.div`
-  border-radius: 0 0 24px 24px;
-  border: thin solid #DF1463;
+const ContainerDiv = styled.div`
   background-color: #26343f; 
+  height: 100%;
+  width: 100%;
+  overflow-y: hidden;
+
+  display:flex;
+  flex-direction: column;
 `;
 
-class DebugOutput extends React.Component {
-  render(){
-    return(
-      <containerDiv>
-        <titleDiv>
-          <p>Title</p>
-        </titleDiv>
-        <contentDiv>
-          <p>Content</p>
-        </contentDiv>
-      </containerDiv>
-  )}
+const TitleContainerDiv = styled.div`
+  flex: 0 1 auto;
+
+  background-color: #15232e; 
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.5em 1em;
+`;
+
+const TitleSpan = styled.span`
+  color: white;
+  font-size: large;
+  font-weight: bold;
+`
+
+const IpSpan = styled.span`
+  color: grey;
+  font-size: medium;
+  font-family: monospace;
+  font-style: italic;
+`
+
+const ContentDiv = styled.div`
+  flex: 1 1 80vh;
+
+  display: flex;
+  flex-direction: column; 
+  overflow-y: auto;
+
+  // max-height: 85vh; // need otherwise overflow won't work
+`;
+
+const Separator = styled.hr`
+  border-top: 3px solid  #DF1463;
+  border-bottom: 0;
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+  margin: 0;
+  padding:0;
+`
+
+const FooterContainer = styled.div`
+  flex: 0 1 2.5vh;
+  background-color: #15232e; 
+`
+
+export function ResponseElement(props) {
+  const { time, timeTaken , msg } = props;
+  return(
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        padding: "0.5em 0.7em",
+        gap: "0.5em",
+      }}> 
+      <span
+        style={{
+          color: "grey",
+          fontSize: "medium",
+          fontFamily: "monospace",
+        }}>
+          {time} ({timeTaken}):
+      </span>
+
+      <span
+        style={{
+          color: "white",
+          fontSize: "large",
+          fontFamily: "monospace",
+        }}>
+          {msg}
+      </span>
+    </div>
+  );
 }
 
-export default DebugOutput;
+export function DebugOutput(props) {
+    const { Title, IP, children } = props;
+    return(
+      <ContainerDiv>
+        <TitleContainerDiv>
+          <TitleSpan>
+            {Title} 
+          </TitleSpan>
+          <IpSpan>
+            IP: {IP}
+          </IpSpan>
+        </TitleContainerDiv>
+        <Separator />
+        <ContentDiv>
+          {children}
+        </ContentDiv>
+        <Separator />
+        <FooterContainer />
+      </ContainerDiv>
+  )
+}

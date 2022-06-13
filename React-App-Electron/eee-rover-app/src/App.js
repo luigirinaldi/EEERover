@@ -1,8 +1,11 @@
-import React, { startTransition } from 'react';
+import React from 'react';
 import './App.css';
 import Navbar from './components/Navbar';
 import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
+
+// Contexts
 import { IpContext } from './context/ip-context';
+import { GamepadsProvider } from 'react-gamepads';
 
 import Home from './pages/Home';
 import Debug from './pages/Debug';
@@ -29,6 +32,7 @@ class App extends React.Component {
     return (
         <Router>
           <Navbar />
+          <GamepadsProvider>
           <IpContext.Provider value={this.state}>
             <Routes>
               <Route exact path='/' element={<Home/>} />
@@ -38,6 +42,7 @@ class App extends React.Component {
               <Route path='/Settings' element={<Settings/>} />
             </Routes>
           </IpContext.Provider>
+          </GamepadsProvider>
         </Router>
     );
   }
