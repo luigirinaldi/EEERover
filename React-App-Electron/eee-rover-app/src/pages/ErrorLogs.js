@@ -21,7 +21,7 @@ const ErrorLogs = () => {
       <button onClick={() => {
         ipcRenderer.send('send-udp-message', {
           ip: roverIP,
-          port: 33333,
+          port: 1883,
           host: window.location.host,
           message: "test",
         });

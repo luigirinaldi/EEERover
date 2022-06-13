@@ -39,8 +39,8 @@ HasStopped = False
 Stopping = True
 pygame.time.set_timer(TimerSend, TimerSendTime)
 
-UDP_IP = "127.0.0.1"
-UDP_PORT = 5005
+UDP_IP = "172.20.10.5"
+UDP_PORT = 1883
 message = "B000A000000000R" # B + Rotation (0 stop 1 clockwise 2 anti clockwise) + motion 1 (forward 1, back 2, stop 0) + motion 2 (right 3, left 4, stop 0) + A + motion 1 sped + motion 2 sped + rotating sped + R
 message = list(message)
 message[3] = '0'
