@@ -20,7 +20,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "electron": "electron ."
+    "electron": "electron .",
+    "electron-dev": "ELECTRON_START_URL=http://localhost:3000 electron ."
   },
   "eslintConfig": {
     "extends": [
@@ -42,5 +43,6 @@
   },
   "devDependencies": {
     "electron": "^19.0.3"
-  }
+  },
+  "homepage": "./"
 }

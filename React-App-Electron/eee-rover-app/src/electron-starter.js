@@ -7,18 +7,30 @@ const BrowserWindow = electron.BrowserWindow;
 const path = require('path');
 const url = require('url');
 
+let dgram = require('dgram');
+
+const { ipcMain } = electron;
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
 function createWindow() {
     // Create the browser window.
-    mainWindow = new BrowserWindow({width: 800, height: 600});
+    mainWindow = new BrowserWindow({
+        width: 800, 
+        height: 600,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+            enableRemoteModule: true,
+         }
+    });
 
     mainWindow.removeMenu();
 
     // and load the index.html of the app.
-    mainWindow.loadURL('http://localhost:3000');
+    mainWindow.loadURL("http://localhost:3000");
 
     // Open the DevTools.
     mainWindow.webContents.openDevTools();
@@ -53,3 +65,17 @@ app.on('activate', function () {
         createWindow()
     }
 });
+
+ipcMain.on('send-udp-message', (event, arg) => {
+    console.log(arg) // prints "ping"
+
+    let server = dgram.createSocket('udp4');
+
+    server.send(arg.message, 0, arg.message.length, arg.port, arg.ip, function(err, bytes) {
+        if (err) throw err;
+        console.log('UDP message sent from ' + arg.host + ' to ' + arg.ip +':'+ arg.port);
+        server.close();
+    });
+
+    event.reply('asynchronous-reply', 'pong')
+})

@@ -20,6 +20,7 @@ WiFiClient currentClient;
 
 
 void HandleRoot(){
+  Serial.println("Device connected");
   currentClient = server.client();
   currentClient.print(
   "HTTP/1.1 200 OK\r\n"
@@ -31,7 +32,6 @@ void HandleRoot(){
   "\r\n");
   currentClient.print(F("Connected to JABA Rover\r\n"));
   currentClient.stop();
-  Serial.println("Device connected");
 }
 
 const String returnMessages[] = {"STOP", "forward", "back", "right", "left", "clockwise", "anticlockwise"};
@@ -40,9 +40,6 @@ void HandleMovement(){
   currentClient = server.client();
 
   if(server.method() == HTTP_POST){
-
-		
-		
     if(server.arg("plain")[0] == 'J' && server.arg("plain")[3] == 'A' && server.arg("plain")[7] == 'B'){ // check if body in correct format 
 			char postBody[9];
 			server.arg("plain").toCharArray(postBody, 9);
@@ -188,4 +185,5 @@ void setup()
 void loop()
 {
   server.handleClient();
+  
 }

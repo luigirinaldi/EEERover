@@ -297,6 +297,8 @@ class AnalogueControl extends React.Component {
       Y: -newGamepad.axes[1],
     }
 
+    // console.log(rightStick);
+
     let leftVector = this.getVector(leftStick);
     let rightVector = this.getVector(rightStick);
 
@@ -368,7 +370,7 @@ class AnalogueControl extends React.Component {
     if(changingDirection){
       this.stopped = false;
       // J + Rotation (0 stop 1 clockwise 2 anti clockwise) + motion 1 (forward 1, back 2, stop 0) + motion 2 (right 3, left 4, stop 0) + A + motion 1 sped + motion 2 sped + rotating sped + B
-      console.log("Changing direction");
+      // console.log("Changing direction");
       let msg = 'J' + (rotation < 0 ? '2' : '1') + (Y < 0 ? '2' : '1') +  (X < 0 ? '4' : '3');
       Y = Math.abs(Math.round(Y));
       X = Math.abs(Math.round(X));
@@ -389,7 +391,10 @@ class AnalogueControl extends React.Component {
     fetch(this.destinationURL + "move", {
       method: 'POST',
       body: msg,
-      headers: {"Content-Type": "text/plain"},
+      headers: {
+        "Content-Type": "text/plain",
+        "Connection": "Keep-Alive",
+      },
       mode: 'cors',
       Host: `http://${window.location.host}/`,
       Origin: this.destinationURL,
