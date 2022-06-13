@@ -328,24 +328,41 @@ class AnalogueControl extends React.Component {
   move(right, left, leftV){
     let oldLeftV = this.vectors.leftVector;
     let oldRight = this.vectors.rightStick;
+    let oldLeft = this.vectors.leftStick;
 
     // let { X, Y } = oldLeftV.magnitude < ZERO_BOUNDARY ? 0 : this.getSped(this.vectors.leftStick);
     // let rotation = this.getSped(oldRight).X < ZERO_BOUNDARY ? 0 : this.getSped(oldRight).X;
 
-    let  X = 0, Y = 0;
+    let  X = 0; 
+    let Y = 0;
     let rotation = 0;
 
     let changingDirection = false;
 
-    if (Math.abs(oldLeftV.magnitude - leftV.magnitude) > MIN_DIFFERENCE || Math.abs(oldLeftV.angle - leftV.angle) > MIN_DIFFERENCE) {
-      changingDirection = true;
-      X = this.getSped(left).X;
-      Y = this.getSped(left).Y;
+    if (Math.abs(leftV.magnitude) < ZERO_BOUNDARY){
+      X = 0;
+      Y = 0;
+    } else {
+      if (Math.abs(oldLeftV.magnitude - leftV.magnitude) > MIN_DIFFERENCE || Math.abs(oldLeftV.angle - leftV.angle) > MIN_DIFFERENCE) {
+        changingDirection = true;
+        X = this.getSped(left).X;
+        Y = this.getSped(left).Y;
+      } else {
+        X = this.getSped(oldLeft).X;
+        Y = this.getSped(oldLeft).Y;
+      }
+
     }
 
-    if (Math.abs(oldRight.X - right.X) > MIN_DIFFERENCE){
-      changingDirection = true;      
-      rotation = this.getSped(right).X;
+    if (Math.abs(right.X) < ZERO_BOUNDARY){
+      rotation = 0;
+    } else {
+      if (Math.abs(oldRight.X - right.X) > MIN_DIFFERENCE){
+        changingDirection = true;      
+        rotation = this.getSped(right).X;
+      } else {
+        rotation = this.getSped(oldRight).X;
+      }
     }
 
     if(changingDirection){
