@@ -46,7 +46,7 @@ class MotorControlUDP extends React.Component {
       if(message.message[0] === 'J'){ // enough to check if it is a motor control message
         // TODO timing the request
       } else {
-        this.addResponse(stopDate.toTimeString, '', message.message);
+        this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);
       }
     })
   }
