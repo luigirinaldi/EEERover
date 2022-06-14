@@ -8,8 +8,13 @@ const path = require('path');
 const url = require('url');
 
 let dgram = require('dgram');
+let UdpComms = require('./udpStuff/UdpClass').UdpComms;
+
+console.log(UdpComms);
 
 const { ipcMain } = electron;
+
+let UDP = new UdpComms();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -67,7 +72,7 @@ app.on('activate', function () {
 });
 
 ipcMain.on('send-udp-message', (event, arg) => {
-    console.log(arg) // prints "ping"
+    console.log(arg)
 
     let server = dgram.createSocket('udp4');
 
@@ -77,5 +82,5 @@ ipcMain.on('send-udp-message', (event, arg) => {
         server.close();
     });
 
-    event.reply('asynchronous-reply', 'pong')
+    event.reply('asynchronous-reply', 'pongong')
 })
