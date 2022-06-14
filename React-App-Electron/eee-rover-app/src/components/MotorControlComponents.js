@@ -42,17 +42,8 @@ export class DiscreteControl extends React.Component {
 
     this.prevKey = ''; // use to only execute one thing per keypress
 
-    //measure time taken for request to get response
-    this.startDate = new Date();
-    this.endDate = new Date();
-
-    this.destinationIP = props.roverIP;
-    this.destinationURL = "http://" + props.roverIP + "/";
-
     // not sure if all of this is needed
     this.handleDirectionChange = this.handleDirectionChange.bind(this);
-    this.testConnection = this.testConnection.bind(this);
-    this.updateResponse = this.updateResponse.bind(this);
     this.move = this.move.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.handleKeyUp = this.handleKeyUp.bind(this);
@@ -140,45 +131,10 @@ export class DiscreteControl extends React.Component {
 
       this.startDate = new Date();
 
-      
-      fetch(this.destinationURL + "move", {
-        method: 'POST',
-        body: msg,
-        headers: {"Content-Type": "text/plain"},
-        mode: 'cors',
-        Host: `http://${window.location.host}/`,
-        Origin: this.destinationURL,
-      })
-      .then(response => response.text())
-      .then(data => this.updateResponse(data))
-      .catch((error) => {
-        console.error('Error:', error);
-      });
+      this.props.sendCode(msg);
     } else {
       console.log("Incorrect movement values")
     }
-  }
-
-  updateResponse(response){
-    this.endDate = new Date(); //not very accurate but other methods break the response stuff
-    let elapsedTime = (this.endDate - this.startDate)/1000;
-    let time = this.endDate.getHours() + ":" + this.endDate.getMinutes() + ":" + this.endDate.getSeconds();
-    this.props.responseDataFunc(time, elapsedTime, response);
-  }
-
-  testConnection(){
-    this.startDate = new Date();
-    fetch(this.destinationURL, {
-      method: 'GET',
-      mode: 'cors',
-      Host: `http://${window.location.host}/`,
-      Origin: this.destinationURL,
-    })
-    .then(response => response.text())
-    .then(data => this.updateResponse(data))
-    .catch((error) => {
-      console.error('Error:', error);
-    });
   }
 
   handleDirectionChange(direction){
@@ -227,7 +183,7 @@ export class DiscreteControl extends React.Component {
     return(
       <div onKeyDown={this.handleKeyDown} onKeyUp={this.handleKeyUp}> 
         <ArrowControl clickHandler={this.handleDirectionChange}/>
-        <button onClick={this.testConnection} >
+        <button onClick={this.props.testConnection} >
           Test Connection
         </button>
       </div>
@@ -253,15 +209,7 @@ export class AnalogueControl extends React.Component {
 
     this.stopped = true;
 
-    //measure time taken for request to get response
-    this.startDate = new Date();
-    this.endDate = new Date();
-
-    this.destinationIP = props.roverIP;
-    this.destinationURL = "http://" + props.roverIP + "/";
-
     this.move = this.move.bind(this);
-    this.updateResponse = this.updateResponse.bind(this);
     this.stop = this.stop.bind(this);
   }
 
@@ -373,39 +321,12 @@ export class AnalogueControl extends React.Component {
       msg += 'A' + String(Y).padStart(3, '0') + String(X).padStart(3, '0') + String(rotation).padStart(3, '0') + 'B';
 
       // console.log(msg);
-      this.sendPostRequest(msg);
+      this.props.sendCode(msg);
     }
   }
 
   stop(){
-    this.sendPostRequest("J000A000000000B"); // stop message)
-  }
-
-  sendPostRequest(msg){
-    this.startDate = new Date();
-    fetch(this.destinationURL + "move", {
-      method: 'POST',
-      body: msg,
-      headers: {
-        "Content-Type": "text/plain",
-        "Connection": "Keep-Alive",
-      },
-      mode: 'cors',
-      Host: `http://${window.location.host}/`,
-      Origin: this.destinationURL,
-    })
-    .then(response => response.text())
-    .then(data => this.updateResponse(data))
-    .catch((error) => {
-      console.error('Error:', error);
-    });
-  }
-
-  updateResponse(response){
-    this.endDate = new Date(); //not very accurate but other methods break the response stuff
-    let elapsedTime = (this.endDate - this.startDate)/1000;
-    let time = this.endDate.getHours() + ":" + this.endDate.getMinutes() + ":" + this.endDate.getSeconds();
-    this.props.responseDataFunc(time, elapsedTime, response);
+    this.props.sendCode("J000A000000000B"); // stop message)
   }
 
   render(){

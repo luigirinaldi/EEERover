@@ -56,7 +56,9 @@ app.on('activate', function () {
 ipcMain.on('send-udp-message', (event, arg) => {
     console.log(arg)
 
-    UDP.sendUDPMessage(arg, event);
+    let response = UDP.sendUDPMessage(arg, event);
+
+    event.returnValue = response;
 });
 
 ipcMain.on('change-udp-settings', (event, arg) => {

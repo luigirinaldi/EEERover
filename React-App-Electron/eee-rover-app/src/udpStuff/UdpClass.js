@@ -2,6 +2,7 @@ let dgram = require('dgram')
 
 // Import the necessary Node modules.
 const nodePath = require('path');
+const { json } = require('stream/consumers');
 
 // Import the necessary Application modules.
 const appMainWindow = require(nodePath.join(__dirname, '../main-window'));
@@ -10,7 +11,7 @@ class UdpComms {
   constructor(){
     console.log("constructing new UDP class");
 
-    this.localIP = '172.20.10.2';
+    this.localIP = '172.20.10.7';
     this.listeningPort = '52113';
 
     this.remoteIP = '172.20.10.5';
@@ -31,7 +32,7 @@ class UdpComms {
     if(this.clientSock){
       this.clientSock.close();
     }
-
+    console.log('initialize udp listener');
     this.clientSock = dgram.createSocket('udp4');
 
     this.clientSock.on('listening', () => {
@@ -54,14 +55,23 @@ class UdpComms {
   messageHandler(message, remote){
     console.log("Received message from " + remote.address + ':' + remote.port +' - ' + message);
     // send to renderer
-    appMainWindow.get().webContents.send('received-udp-message', {
-      address: remote.address,
-      port: remote.port,
-      message: message
-    })
+
+    appMainWindow.get().webContents.send('asynchronous-reply', 'received udp message' + message);
+
+    // appMainWindow.get().webContents.send('received-udp-message', {
+    //   address: remote.address,
+    //   port: remote.port,
+    //   message: message
+    // })
+
+    appMainWindow.get().webContents.send('received-udp-message', JSON.stringify({
+      message:message.toString(),
+      ip: remote.address,
+      port: remote.port
+    }));
   }
 
-  sendUDPMessage(message, event){
+  sendUDPMessage(message){
     let sender = dgram.createSocket('udp4');
 
     let bufferMessage = new Buffer(message);
@@ -70,12 +80,12 @@ class UdpComms {
 
     sender.send(bufferMessage, 0, bufferMessage.length, this.remotePort, this.remoteIP, (err, bytes) => {
       if(err){
-        console.log('error:');
-        throw err;
+        console.log('error:' + err.message);
+        // throw err;
       }
       console.log('UDP message sent to ' + this.remoteIP +':'+ this.remotePort);
-      event.reply('udp-message-sent', 'success');
       sender.close();
+      return err ? "fail" : "success"; // message to relay back to renderer
     })
   }
 

@@ -21,13 +21,6 @@ class IpInputBox extends React.Component {
 
     this.handleSubmit = this.handleSubmit.bind(this);
 
-    ipcRenderer.on('asynchronous-reply', (event, arg) => {
-      console.log(arg);
-    })
-  }
-
-  componentWillUnmount(){
-    ipcRenderer.removeAllListeners('asynchronous-reply');
   }
 
   handleRoverIPChange(event) {
