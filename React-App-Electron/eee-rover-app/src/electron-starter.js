@@ -40,6 +40,16 @@ function createWindow() {
     // Open the DevTools.
     mainWindow.webContents.openDevTools();
 
+    //attach window to UDP class so messages can be sent to renderer:
+    mainWindow.webContents.on('did-finish-load', () => {
+        UDP.window = mainWindow
+
+        console.log(UDP.window.webContents.send);
+
+        mainWindow.webContents.send('asynchronous-reply', 'Web page loaded!')
+        UDP.window.webContents.send('asynchronous-reply', 'Sending from udp class')
+    });
+
     // Emitted when the window is closed.
     mainWindow.on('closed', function () {
         // Dereference the window object, usually you would store windows
@@ -71,16 +81,18 @@ app.on('activate', function () {
     }
 });
 
+// Commuincation between main process (this one) and renderer (react)
+
 ipcMain.on('send-udp-message', (event, arg) => {
     console.log(arg)
 
-    let server = dgram.createSocket('udp4');
+    UDP.sendUDPMessage(arg, event);
+});
 
-    server.send(arg.message, 0, arg.message.length, arg.port, arg.ip, function(err, bytes) {
-        if (err) throw err;
-        console.log('UDP message sent from ' + arg.host + ' to ' + arg.ip +':'+ arg.port);
-        server.close();
-    });
+ipcMain.on('change-udp-settings', (event, arg) => {
+    UDP.changeUDPListener(arg.localIP, arg.listeningPort);
+    UDP.remoteIP = arg.remoteIP;
+    UDP.remotePort = arg.remotePort;
 
-    event.reply('asynchronous-reply', 'pongong')
-})
+    event.reply('asynchronous-reply', 'Changed UDP settings');
+});

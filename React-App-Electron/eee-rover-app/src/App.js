@@ -18,12 +18,16 @@ class App extends React.Component {
   constructor(props) {
     super(props);
 
-    this.updateIP = (newIP) => {
-      this.setState({roverIP: newIP});
+    this.updateIP = (newRoverIP, newLocalIP) => {
+      this.setState({
+        roverIP: newRoverIP,
+        localIP: newLocalIP
+      });
     }
 
     this.state = {
-      roverIP: "192.168.0.16",
+      roverIP: "172.20.10.5",
+      localIP: "172.20.10.2",
       changeIP: this.updateIP,
     };
   }

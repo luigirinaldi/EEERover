@@ -32,6 +32,7 @@ WiFiUDP Udp;
 char ssid[] = "iPhone di Luigi";        // your network SSID (name)
 char pass[] = "passwordThatsVeryStrong";
 const int groupNumber = 15;
+const int i2c_slave_motor = 4;
 
 void printWifiStatus()
 {
@@ -48,6 +49,96 @@ void printWifiStatus()
   Serial.print(F(", Signal strength (RSSI):"));
   Serial.print(rssi);
   Serial.println(F(" dBm"));
+}
+
+void udpHandleMove(char packetBuffer[255]){
+  if(packetBuffer[1]=='B' && packetBuffer[4]=='A' && packetBuffer[8]=='R'){ // mB__A___R
+    // direction info
+    SendDetail[1] = packetBuffer[2];
+    SendDetail[2] = packetBuffer[3];
+    // sped info
+    SendDetail[4] = packetBuffer[5];
+    SendDetail[5] = packetBuffer[6];
+    SendDetail[6] = packetBuffer[7];
+
+    Wire.beginTransmission(i2c_slave_motor);
+    Wire.write(SendDetail);
+    Wire.endTransmission();
+
+    Serial.println(SendDetail);
+
+    Udp.beginPacket(Udp.remoteIP(), upperPort);
+    Udp.write(SendDetail);  
+    Udp.endPacket();
+  } else if (packetBuffer[1]=='B' && packetBuffer[5]=='A' && packetBuffer[15]=='R'){ //mB___A_________R
+    // direction codes
+    SendDetail2[1] = packetBuffer[2];
+    SendDetail2[2] = packetBuffer[3];
+    SendDetail2[3] = packetBuffer[4];
+    //sped codes
+    SendDetail2[5] = packetBuffer[6];
+    SendDetail2[6] = packetBuffer[7];
+    SendDetail2[7] = packetBuffer[8];
+    SendDetail2[8] = packetBuffer[9];
+    SendDetail2[9] = packetBuffer[10];
+    SendDetail2[10] = packetBuffer[12];
+    SendDetail2[11] = packetBuffer[12];
+    SendDetail2[12] = packetBuffer[13];
+    SendDetail2[13] = packetBuffer[14];
+    
+    Wire.beginTransmission(i2c_slave_motor);
+    Wire.write(SendDetail2);
+    Wire.endTransmission();
+
+    Serial.println(SendDetail2);
+
+    Udp.beginPacket(Udp.remoteIP(), upperPort);
+    Udp.write(SendDetail2);  
+    Udp.endPacket();
+  } else {
+    Serial.println("wrong format");
+    Udp.beginPacket(Udp.remoteIP(), upperPort);
+    Udp.write("Incorrect Data Format");  
+    Udp.endPacket();
+  }
+}
+
+void udpHandleMessage(int packetSize){
+    Serial.print(F("Received packet of size "));
+    Serial.println(packetSize);
+    Serial.print(F("From "));
+    IPAddress remoteIp = Udp.remoteIP();
+    Serial.print(remoteIp);
+    Serial.print(F(", port "));
+    Serial.println(Udp.remotePort());
+
+    // read the packet into packetBufffer
+    int len = Udp.read(packetBuffer, 255);
+    if (len > 0)
+    {
+      packetBuffer[len] = 0;
+    }
+
+    Serial.println(F("Contents:"));
+    Serial.println(packetBuffer);
+    
+    switch(packetBuffer[0]){
+      case 'm': //movement message
+        udpHandleMove(packetBuffer);
+        break; //not really needed
+      case 't': //test message
+        Udp.beginPacket(Udp.remoteIP(), upperPort);
+        Udp.write("Successful connection to JABA Rover");  
+        Udp.endPacket();
+        break;
+      default:
+        Udp.beginPacket(Udp.remoteIP(), upperPort);
+        Udp.write("Incorrect Data Format");  
+        Udp.endPacket();
+        break;
+    }
+
+    // send a reply, to the IP address and port that sent us the packet we received
 }
 
 void setup()
@@ -102,69 +193,6 @@ void loop()
   //Serial.println("Listening");
   if (packetSize)
   {
-    Serial.print(F("Received packet of size "));
-    Serial.println(packetSize);
-    Serial.print(F("From "));
-    IPAddress remoteIp = Udp.remoteIP();
-    Serial.print(remoteIp);
-    Serial.print(F(", port "));
-    Serial.println(Udp.remotePort());
-
-    // read the packet into packetBufffer
-    int len = Udp.read(packetBuffer, 255);
-    if (len > 0)
-    {
-      packetBuffer[len] = 0;
-    }
-
-    Serial.println(F("Contents:"));
-    Serial.println(packetBuffer);
-  Serial.println(packetBuffer[1]);
-    if(packetBuffer[0]=='B'){
-      if(packetBuffer[4]=='A'){
-        if(packetBuffer[8]=='R'){
-          Wire.beginTransmission(4);
-          SendDetail[2] = packetBuffer[3];
-          SendDetail[4] = packetBuffer[5];
-          SendDetail[5] = packetBuffer[6];
-          SendDetail[6] = packetBuffer[7];
-          Wire.write(SendDetail);
-          Wire.endTransmission();
-          Serial.println(SendDetail);
-          Udp.beginPacket(Udp.remoteIP(), upperPort);
-
-          Udp.write(SendDetail);
-    
-          Udp.endPacket();
-        }else{Serial.println("WRONG R in 1");
-          if(packetBuffer[14]=='R'){
-            Wire.beginTransmission(4);
-            SendDetail2[1] = packetBuffer[1];
-            SendDetail2[2] = packetBuffer[2];
-            SendDetail2[3] = packetBuffer[3];
-            SendDetail2[5] = packetBuffer[5];
-            SendDetail2[6] = packetBuffer[6];
-            SendDetail2[7] = packetBuffer[7];
-            SendDetail2[8] = packetBuffer[8];
-            SendDetail2[9] = packetBuffer[9];
-            SendDetail2[10] = packetBuffer[10];
-            SendDetail2[11] = packetBuffer[11];
-            SendDetail2[12] = packetBuffer[12];
-            SendDetail2[13] = packetBuffer[13];
-            Wire.write(SendDetail2);
-            Wire.endTransmission();
-            Serial.println(SendDetail2);
-            Udp.beginPacket(Udp.remoteIP(), upperPort);
-
-            Udp.write(SendDetail2);
-    
-            Udp.endPacket();
-          }
-        }
-      }else{Serial.println("WRONG A in all");}
-    }else{Serial.println("WRONG B in all");}
-
-    // send a reply, to the IP address and port that sent us the packet we received
-    
+    udpHandleMessage(packetSize);    
   }
 }
