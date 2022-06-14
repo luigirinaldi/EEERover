@@ -4,12 +4,6 @@ import PageContainer from './PageContainer';
 
 const electron = window.require('electron');
 const { ipcRenderer } = electron;
-// const remote = electron.remote;
-// const { os } = remote;
-
-ipcRenderer.on('asynchronous-reply', (event, arg) => {
-  console.log(arg) // prints "pong"
-})
 
 
 const ErrorLogs = () => {  

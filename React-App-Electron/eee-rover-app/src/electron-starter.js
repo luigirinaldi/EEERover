@@ -4,11 +4,15 @@ const app = electron.app;
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow;
 
-const path = require('path');
-const url = require('url');
+const UdpComms = require('./udpStuff/UdpClass').UdpComms;
 
-let dgram = require('dgram');
-let UdpComms = require('./udpStuff/UdpClass').UdpComms;
+// Import the necessary Node modules.
+const nodePath = require('path');
+// import Applicatino modules
+const appMainWindow = require(nodePath.join(__dirname, 'main-window'));
+
+//prevent garbage collection:
+let mainWindow = null;
 
 console.log(UdpComms);
 
@@ -18,51 +22,17 @@ let UDP = new UdpComms();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow;
 
-function createWindow() {
-    // Create the browser window.
-    mainWindow = new BrowserWindow({
-        width: 800, 
-        height: 600,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-            enableRemoteModule: true,
-         }
-    });
+// UDP.window = mainWindow;s
 
-    mainWindow.removeMenu();
 
-    // and load the index.html of the app.
-    mainWindow.loadURL("http://localhost:3000");
-
-    // Open the DevTools.
-    mainWindow.webContents.openDevTools();
-
-    //attach window to UDP class so messages can be sent to renderer:
-    mainWindow.webContents.on('did-finish-load', () => {
-        UDP.window = mainWindow
-
-        console.log(UDP.window.webContents.send);
-
-        mainWindow.webContents.send('asynchronous-reply', 'Web page loaded!')
-        UDP.window.webContents.send('asynchronous-reply', 'Sending from udp class')
-    });
-
-    // Emitted when the window is closed.
-    mainWindow.on('closed', function () {
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
-        mainWindow = null
-    })
-}
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+    mainWindow = appMainWindow.create();
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -77,7 +47,7 @@ app.on('activate', function () {
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (mainWindow === null) {
-        createWindow()
+        mainWindow = appMainWindow.create();
     }
 });
 

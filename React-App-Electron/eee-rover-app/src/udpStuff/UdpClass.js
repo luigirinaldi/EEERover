@@ -1,6 +1,10 @@
 let dgram = require('dgram')
-const { ipcMain
- } = require('electron');
+
+// Import the necessary Node modules.
+const nodePath = require('path');
+
+// Import the necessary Application modules.
+const appMainWindow = require(nodePath.join(__dirname, '../main-window'));
 
 class UdpComms {
   constructor(){
@@ -37,31 +41,32 @@ class UdpComms {
 
     this.clientSock.on('message', this.messageHandler);
 
-    this.clientSock.bind(this.listeningPort, this.localIP);
+    this.clientSock.bind(this.listeningPort, this.localIP, err => {
+      if(err){
+        console.log("Error while initializing UDP listener");
+        console.log(err);
+      } else {
+        console.log("UDP listener initialized!");
+      }
+    });
   }
 
   messageHandler(message, remote){
     console.log("Received message from " + remote.address + ':' + remote.port +' - ' + message);
     // send to renderer
-    // if(this.window !== undefined){ //check if exists and if correct type
-    // this.window.webContents.on('did-finish-load', () => {
-    //   this.window.webContents.send('received-udp-message', {
-    //     address: remote.address,
-    //     port: remote.port,
-    //     message: message
-    //   });
-    // });
-  //   } else {
-  //     console.log("Window is not defined");
-  //   }
-
-    // webContents.send('send-asynchronous-reply', 'received message')
+    appMainWindow.get().webContents.send('received-udp-message', {
+      address: remote.address,
+      port: remote.port,
+      message: message
+    })
   }
 
   sendUDPMessage(message, event){
     let sender = dgram.createSocket('udp4');
 
     let bufferMessage = new Buffer(message);
+
+    appMainWindow.get().webContents.send('asynchronous-reply', 'sending udp message');
 
     sender.send(bufferMessage, 0, bufferMessage.length, this.remotePort, this.remoteIP, (err, bytes) => {
       if(err){

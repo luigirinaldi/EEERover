@@ -13,6 +13,15 @@ import ErrorLogs from './pages/ErrorLogs';
 import MotorControl from './pages/MotorControl';
 import Settings from './pages/Settings';
 
+const electron = window.require('electron');
+const { ipcRenderer } = electron;
+
+// Page wide listener for messages coming from main process
+ipcRenderer.on('asynchronous-reply', (event, arg) => {
+  console.log("Main: " + arg) // prints "pong"
+})
+
+
 class App extends React.Component {
 
   constructor(props) {
