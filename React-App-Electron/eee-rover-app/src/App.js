@@ -35,15 +35,6 @@ class App extends React.Component {
       changeIP: this.updateIP,
     };
 
-    // Page wide listener for messages coming from main process
-    ipcRenderer.on('asynchronous-reply', (event, arg) => {
-      console.log("Main: " + arg) 
-    })
-  }
-
-  //THIS DOES NOT RUN !!!!!!!!!!!!!!!!!!!!!!!!! ------------------------------------------------------------- FIXZ IT PLEASE
-  componentWillUnmount(){
-    ipcRenderer.removeAllListeners('asynchronous-reply');
   }
 
   render(){

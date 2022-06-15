@@ -36,6 +36,9 @@ class MotorControlUDP extends React.Component {
     this.sendCode = this.sendCode.bind(this);
     this.testConnection = this.testConnection.bind(this);
 
+  }
+
+  componentDidMount(){ 
     ipcRenderer.on('received-udp-message', (event, arg) => {
       // console.log(arg);
       let stopDate = new Date();
@@ -63,17 +66,31 @@ class MotorControlUDP extends React.Component {
       } else {
         this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);  
       }
-    });   
+    });  
+
+    // set the destination url here becasue context is not yet defined in constructor
+    this.destinationURL = "http://" + this.context.roverIP + "/";
+
+    this.gamepadTimer = setInterval(() => {
+      const gamepad = navigator.getGamepads()[0]; // use the first gamepad
+
+      if(gamepad){
+        this.gamepad = gamepad;
+
+        this.setState({
+          controllerAvailable: true,
+          controllerID: gamepad.id,
+        });
+
+      } else {
+        this.setState({controllerAvailable: false});
+      }
+    }, CONTROLLER_POLLING_RATE); //repeat every 100 milliseconds
   }
 
-
   componentWillUnmount(){
-    ipcRenderer.removeAllListeners('received-udp-message');
+    ipcRenderer.removeAllListeners();
     // ipcRenderer.removeListener('received-test-message', this.handleTestMessage);
-    ipcRenderer.removeAllListeners('received-move-message');
-    ipcRenderer.removeAllListeners('received-error-message');
-    ipcRenderer.removeAllListeners('received-data-message');
-
     clearInterval(this.gamepadTimer);
   }
 
@@ -121,28 +138,6 @@ class MotorControlUDP extends React.Component {
     })
   }
 
-  componentDidMount() {
-    // set the destination url here becasue context is not yet defined in constructor
-    this.destinationURL = "http://" + this.context.roverIP + "/";
-
-    this.gamepadTimer = setInterval(() => {
-      const gamepad = navigator.getGamepads()[0]; // use the first gamepad
-
-      if(gamepad){
-        this.gamepad = gamepad;
-
-        this.setState({
-          controllerAvailable: true,
-          controllerID: gamepad.id,
-        });
-
-      } else {
-        this.setState({controllerAvailable: false});
-      }
-    }, CONTROLLER_POLLING_RATE); //repeat every 100 milliseconds
-  }
-
-
   render(){
   const { roverIP } = this.context;
 
@@ -155,7 +150,6 @@ class MotorControlUDP extends React.Component {
             testConnection={this.testConnection}
             gamepad={this.gamepad}
           />
-          <>
             <h3>Analogue Control</h3>
             {this.state.controllerAvailable ? 
               <>
@@ -170,16 +164,12 @@ class MotorControlUDP extends React.Component {
               : 
               <p>Press a button on the controller</p>
             }
-          </>
         </div>
         {/* TODO, add clear output button */}
         <div className='row2'> 
           <DebugOutput Title="Arduino Responses" IP={roverIP}>
             {this.state.responseMessage}
           </DebugOutput>
-        </div>
-        <div className='row3'>
-
         </div>
       </div>
     </PageContainer>     
