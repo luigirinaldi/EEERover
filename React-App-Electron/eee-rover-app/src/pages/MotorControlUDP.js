@@ -175,7 +175,6 @@ class MotorControlUDP extends React.Component {
             testConnection={this.testConnection}
             gamepad={this.gamepad}
           />
-          <>
             <h3>Analogue Control</h3>
             {this.state.controllerAvailable ? 
               <>
@@ -190,16 +189,12 @@ class MotorControlUDP extends React.Component {
               : 
               <p>Press a button on the controller</p>
             }
-          </>
         </div>
         {/* TODO, add clear output button */}
         <div className='row2'> 
           <DebugOutput Title="Arduino Responses" IP={roverIP}>
             {this.state.responseMessage}
           </DebugOutput>
-        </div>
-        <div className='row3'>
-
         </div>
       </div>
     </PageContainer>     

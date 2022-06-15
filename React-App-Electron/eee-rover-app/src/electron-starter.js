@@ -52,7 +52,6 @@ app.on('activate', function () {
 });
 
 // Commuincation between main process (this one) and renderer (react)
-
 ipcMain.on('send-udp-message', (event, arg) => {
     console.log(arg)
 
@@ -62,9 +61,10 @@ ipcMain.on('send-udp-message', (event, arg) => {
 });
 
 ipcMain.on('change-udp-settings', (event, arg) => {
-    UDP.changeUDPListener(arg.localIP, arg.listeningPort);
+    UDP.changeUDPListener(arg.listeningPort);
     UDP.remoteIP = arg.remoteIP;
     UDP.remotePort = arg.remotePort;
+    UDP.initializeUDPListener();
 
     event.reply('asynchronous-reply', 'Changed UDP settings');
 });
