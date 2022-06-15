@@ -7,6 +7,13 @@ const { json } = require('stream/consumers');
 // Import the necessary Application modules.
 const appMainWindow = require(nodePath.join(__dirname, '../main-window'));
 
+const codeToChannel = {
+  't': 'received-test-message',
+  'm': 'received-move-message',
+  'e': 'received-error-message',
+  'd': 'received-data-message',
+}
+
 class UdpComms {
   constructor(){
     console.log("constructing new UDP class");
@@ -56,16 +63,14 @@ class UdpComms {
     console.log("Received message from " + remote.address + ':' + remote.port +' - ' + message);
     // send to renderer
 
-    appMainWindow.get().webContents.send('asynchronous-reply', 'received udp message' + message);
+    appMainWindow.get().webContents.send('asynchronous-reply', 'received udp message:' + message);
 
-    // appMainWindow.get().webContents.send('received-udp-message', {
-    //   address: remote.address,
-    //   port: remote.port,
-    //   message: message
-    // })
+    let channel  = codeToChannel[message.toString()[0]];
 
-    appMainWindow.get().webContents.send('received-udp-message', JSON.stringify({
-      message:message.toString(),
+    if(!channel) channel = 'received-udp-message';
+
+    appMainWindow.get().webContents.send(channel.toString(), JSON.stringify({
+      message:message.toString().slice(1), //remove first bit
       ip: remote.address,
       port: remote.port
     }));
@@ -79,14 +84,18 @@ class UdpComms {
     appMainWindow.get().webContents.send('asynchronous-reply', 'sending udp message');
 
     sender.send(bufferMessage, 0, bufferMessage.length, this.remotePort, this.remoteIP, (err, bytes) => {
-      if(err){
+      if(err !== null){
         console.log('error:' + err.message);
+        sender.close();
+        return "fail";
         // throw err;
       }
       console.log('UDP message sent to ' + this.remoteIP +':'+ this.remotePort);
       sender.close();
-      return err ? "fail" : "success"; // message to relay back to renderer
+      return "success"; // message to relay back to renderer
     })
+
+    return "success"; // a bit jank
   }
 
   setWindow(windowWebContents){

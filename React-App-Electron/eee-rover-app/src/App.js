@@ -34,7 +34,7 @@ class App extends React.Component {
 
     this.state = {
       roverIP: "172.20.10.5",
-      localIP: "172.20.10.7",
+      localIP: "172.20.10.2",
       changeIP: this.updateIP,
     };
 

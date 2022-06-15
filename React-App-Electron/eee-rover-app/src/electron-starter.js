@@ -57,7 +57,7 @@ ipcMain.on('send-udp-message', (event, arg) => {
     console.log(arg)
 
     let response = UDP.sendUDPMessage(arg, event);
-
+    console.log(response);
     event.returnValue = response;
 });
 

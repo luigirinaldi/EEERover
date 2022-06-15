@@ -313,14 +313,14 @@ export class AnalogueControl extends React.Component {
     if(changingDirection){
       this.stopped = false;
       // J + Rotation (0 stop 1 clockwise 2 anti clockwise) + motion 1 (forward 1, back 2, stop 0) + motion 2 (right 3, left 4, stop 0) + A + motion 1 sped + motion 2 sped + rotating sped + B
-      // console.log("Changing direction");
+      console.log("Changing direction");
       let msg = 'J' + (rotation < 0 ? '2' : '1') + (Y < 0 ? '2' : '1') +  (X < 0 ? '4' : '3');
       Y = Math.abs(Math.round(Y));
       X = Math.abs(Math.round(X));
       rotation = Math.abs(Math.round(rotation));
       msg += 'A' + String(Y).padStart(3, '0') + String(X).padStart(3, '0') + String(rotation).padStart(3, '0') + 'B';
 
-      // console.log(msg);
+      console.log(msg);
       this.props.sendCode(msg);
     }
   }

@@ -68,6 +68,7 @@ void udpHandleMove(char packetBuffer[255]){
     Serial.println(SendDetail);
 
     Udp.beginPacket(Udp.remoteIP(), upperPort);
+    Udp.write('m');
     Udp.write(SendDetail);  
     Udp.endPacket();
   } else if (packetBuffer[1]=='B' && packetBuffer[5]=='A' && packetBuffer[15]=='R'){ //mB___A_________R
@@ -93,12 +94,13 @@ void udpHandleMove(char packetBuffer[255]){
     Serial.println(SendDetail2);
 
     Udp.beginPacket(Udp.remoteIP(), upperPort);
+    Udp.write('m'); //code to signal it is a motor message
     Udp.write(SendDetail2);  
     Udp.endPacket();
   } else {
     Serial.println("wrong format");
     Udp.beginPacket(Udp.remoteIP(), upperPort);
-    Udp.write("Incorrect Data Format");  
+    Udp.write("eIncorrect Data Format");  
     Udp.endPacket();
   }
 }
@@ -121,19 +123,19 @@ void udpHandleMessage(int packetSize){
 
     Serial.println(F("Contents:"));
     Serial.println(packetBuffer);
-    
+
     switch(packetBuffer[0]){
       case 'm': //movement message
         udpHandleMove(packetBuffer);
         break; //not really needed
       case 't': //test message
         Udp.beginPacket(Udp.remoteIP(), upperPort);
-        Udp.write("Successful connection to JABA Rover");  
+        Udp.write("tSuccessful connection to JABA Rover");  
         Udp.endPacket();
         break;
       default:
         Udp.beginPacket(Udp.remoteIP(), upperPort);
-        Udp.write("Incorrect Data Format");  
+        Udp.write("eIncorrect Data Format");  
         Udp.endPacket();
         break;
     }

@@ -8,7 +8,7 @@ import { DiscreteControl, AnalogueControl } from '../components/MotorControlComp
 
 
 
-const CONTROLLER_POLLING_RATE = 150; // in milliseconds 
+const CONTROLLER_POLLING_RATE = 50; // in milliseconds 
 class MotorControl extends React.Component {
 
   constructor(props){
@@ -32,34 +32,34 @@ class MotorControl extends React.Component {
   sendCode(code){
     // send post request to arduino
     this.startDate = new Date();
-    fetch(this.destinationURL + "move", {
-        method: 'POST',
-        body: code,
-        headers: {"Content-Type": "text/plain"},
-        mode: 'cors',
-        Host: `http://${window.location.host}/`,
-        Origin: this.destinationURL,
-      })
-      .then(response => response.text())
-      .then(data => this.updateResponse(data))
-      .catch((error) => {
-        console.error('Error:', error);
-    });
+    // fetch(this.destinationURL + "move", {
+    //     method: 'POST',
+    //     body: code,
+    //     headers: {"Content-Type": "text/plain"},
+    //     mode: 'cors',
+    //     Host: `http://${window.location.host}/`,
+    //     Origin: this.destinationURL,
+    //   })
+    //   .then(response => response.text())
+    //   .then(data => this.updateResponse(data))
+    //   .catch((error) => {
+    //     console.error('Error:', error);
+    // });
   }
 
   testConnection(){    
     this.startDate = new Date();
-    fetch(this.destinationURL, {
-      method: 'GET',
-      mode: 'cors',
-      Host: `http://${window.location.host}/`,
-      Origin: this.destinationURL,
-    })
-    .then(response => response.text())
-    .then(data => this.updateResponse(data))
-    .catch((error) => {
-      console.error('Error:', error);
-    });
+    // fetch(this.destinationURL, {
+    //   method: 'GET',
+    //   mode: 'cors',
+    //   Host: `http://${window.location.host}/`,
+    //   Origin: this.destinationURL,
+    // })
+    // .then(response => response.text())
+    // .then(data => this.updateResponse(data))
+    // .catch((error) => {
+    //   console.error('Error:', error);
+    // });
   }
 
   updateResponse(message){

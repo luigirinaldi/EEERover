@@ -42,7 +42,7 @@ const ContentDiv = styled.div`
   flex-direction: column; 
   overflow-y: auto;
 
-  // max-height: 85vh; // need otherwise overflow won't work
+  max-height: 85vh; // need otherwise overflow won't work
 `;
 
 const Separator = styled.hr`

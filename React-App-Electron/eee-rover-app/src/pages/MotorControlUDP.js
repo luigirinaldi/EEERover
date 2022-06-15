@@ -48,11 +48,31 @@ class MotorControlUDP extends React.Component {
       } else {
         this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);
       }
-    })
+    });
+
+    ipcRenderer.on('received-test-message', (event, arg) => {
+      // console.log(arg);
+      let stopDate = new Date();
+      let message = JSON.parse(arg);
+      console.log("Received test message from " + message.ip + ':' + message.port +' - ' + message.message);
+  
+      console.log(this); //why is it undefined???
+      if(this.sentTests.length > 0){
+        let elapsedTime = (stopDate - this.sentTests.shift())/1000; //get first value and remove it
+        this.addResponse(stopDate.toLocaleTimeString('it-IT'), elapsedTime, message.message);        
+      } else {
+        this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);  
+      }
+    });   
   }
 
+
   componentWillUnmount(){
-    // ipcRenderer.removeAllListeners('received-udp-message');
+    ipcRenderer.removeAllListeners('received-udp-message');
+    // ipcRenderer.removeListener('received-test-message', this.handleTestMessage);
+    ipcRenderer.removeAllListeners('received-move-message');
+    ipcRenderer.removeAllListeners('received-error-message');
+    ipcRenderer.removeAllListeners('received-data-message');
 
     clearInterval(this.gamepadTimer);
   }
@@ -75,12 +95,15 @@ class MotorControlUDP extends React.Component {
 
     let udpStatus = ipcRenderer.sendSync('send-udp-message',msg);
     let startDate = new Date();
+    console.log(udpStatus);
 
     if(udpStatus === 'fail'){
       console.log('Failed connection test');
     } else if (udpStatus === 'success'){
       this.sentTests.push(startDate);
     } 
+
+    console.log(this.sentTests);
   }
 
   updateMotorResponse(message){
