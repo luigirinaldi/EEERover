@@ -27,24 +27,13 @@ class App extends React.Component {
     this.updateIP = (newRoverIP, newLocalIP) => {
       this.setState({
         roverIP: newRoverIP,
-        localIP: newLocalIP
       });
     }
 
-
     this.state = {
       roverIP: "172.20.10.5",
-      localIP: "172.20.10.2",
       changeIP: this.updateIP,
     };
-
-    // update on load of app to make sure on main process they are initialized the same as here
-    ipcRenderer.send('change-udp-settings', {
-      localIP: this.state.localIP,
-      listeningPort: '52113',
-      remoteIP: this.state.roverIP,
-      remotePort: '1883'
-    })
 
     // Page wide listener for messages coming from main process
     ipcRenderer.on('asynchronous-reply', (event, arg) => {
@@ -52,6 +41,7 @@ class App extends React.Component {
     })
   }
 
+  //THIS DOES NOT RUN !!!!!!!!!!!!!!!!!!!!!!!!! ------------------------------------------------------------- FIXZ IT PLEASE
   componentWillUnmount(){
     ipcRenderer.removeAllListeners('asynchronous-reply');
   }

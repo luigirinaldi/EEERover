@@ -33,7 +33,9 @@ const PageContainer = ({children, title}) => {
             <TitleDiv>
                 {title}
             </TitleDiv>
-            <MainContent>{children}</MainContent>
+            <MainContent>
+                {children}
+            </MainContent>
         </PageContainerDiv>
     );
 }

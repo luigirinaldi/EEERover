@@ -13,12 +13,9 @@ class IpInputBox extends React.Component {
     this.state = {
       roverIP: '',
       roverPort: '',
-      localIP: '',
     };
 
     this.handleRoverIPChange = this.handleRoverIPChange.bind(this);
-    this.handleLocalIPChange = this.handleLocalIPChange.bind(this);
-
     this.handleSubmit = this.handleSubmit.bind(this);
 
   }
@@ -31,18 +28,13 @@ class IpInputBox extends React.Component {
     this.setState({roverPort: event.target.value});
   }
 
-  handleLocalIPChange(event) {
-    this.setState({localIP: event.target.value});
-  }
-
   handleSubmit(event) {
     event.preventDefault();
     console.log("Updating IP to: " + this.state.roverIP);
-    this.props.updateIpFunc(this.state.roverIP, this.state.localIP); //update global context of IP
+    this.props.updateIpFunc(this.state.roverIP); //update global context of IP
  
     // set values for UDP object
     ipcRenderer.send('change-udp-settings', {
-      localIP: this.state.localIP,
       listeningPort: '52113',
       remoteIP: this.state.roverIP,
       remotePort: '1883'
@@ -50,7 +42,7 @@ class IpInputBox extends React.Component {
   }
 
   render() {
-    const { currentRoverIp, currentLocalIp } = this.props;
+    const { currentRoverIp} = this.props;
     return (
       <form onSubmit={this.handleSubmit}>
         <label>
@@ -59,8 +51,6 @@ class IpInputBox extends React.Component {
           <br />
           {/* Change rover udp port to:
           <input type="text" value={this.state.roverPort} onChange={this.handleChange} placeholder="Enter new port"/> */}
-          Change local IP from {currentLocalIp} to:
-          <input type="text" value={this.state.localIP} onChange={this.handleLocalIPChange} placeholder="Enter new IP"/>
         </label>
         <br />
         <input type="submit" value="Submit" />
@@ -72,13 +62,10 @@ class IpInputBox extends React.Component {
 const Settings = () => {
   return (
     
-    <PageContainer title={Settings}>
-      <div>
-        <h1>Settings</h1>
-      </div>        
+    <PageContainer title="settings">     
       <IpContext.Consumer>
-        {({roverIP, localIP, changeIP}) => (  
-          <IpInputBox updateIpFunc={changeIP} currentRoverIp={roverIP} currentLocalIp={localIP} />
+        {({roverIP, changeIP}) => (  
+          <IpInputBox updateIpFunc={changeIP} currentRoverIp={roverIP}/>
         )}
       </IpContext.Consumer>
     </PageContainer>

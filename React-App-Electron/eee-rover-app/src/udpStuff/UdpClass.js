@@ -3,6 +3,7 @@ let dgram = require('dgram')
 // Import the necessary Node modules.
 const nodePath = require('path');
 const { json } = require('stream/consumers');
+const { domainToUnicode } = require('url');
 
 // Import the necessary Application modules.
 const appMainWindow = require(nodePath.join(__dirname, '../main-window'));
@@ -18,7 +19,6 @@ class UdpComms {
   constructor(){
     console.log("constructing new UDP class");
 
-    this.localIP = '172.20.10.7';
     this.listeningPort = '52113';
 
     this.remoteIP = '172.20.10.5';
@@ -27,46 +27,46 @@ class UdpComms {
     this.initializeUDPListener(); //intialize listener
   }
 
-  changeUDPListener(newIp, newPort){
-    this.localIP = newIp;
+  changeUDPListener(newPort){//Closes the old listerner and creates a new one with a different port and IP
+    this.clientSock.close();
     this.listeningPort = newPort;
-
-    this.initializeUDPListener();
   }
 
   // declare and instantiate listener socket
   initializeUDPListener(){
-    if(this.clientSock){
-      this.clientSock.close();
-    }
-    console.log('initialize udp listener');
+
+    //Create the Udp listener
+    console.log('initializing udp listener ---------------------------|');
     this.clientSock = dgram.createSocket('udp4');
 
+    //Once the connection is open to recieve data run this call back function
     this.clientSock.on('listening', () => {
-      let address = this.clientSock.address();
-      console.log('UDP Server listening on ' + address.address + ':' + address.port);
+      console.log('UDP Server listening on ');
+      console.log(this.clientSock.address());
+      console.log('\n');
     });
 
+    //Handles any recieved messages from the node server
     this.clientSock.on('message', this.messageHandler);
 
-    this.clientSock.bind(this.listeningPort, this.localIP, err => {
-      if(err){
-        console.log("Error while initializing UDP listener");
-        console.log(err);
-      } else {
-        console.log("UDP listener initialized!");
-      }
-    });
+    //Handle and print errors from the node server
+    this.clientSock.on('error', err => {
+      console.log("Node incurred an " + err);
+      this.clientSock.close();
+    })
+
+    //Set the local port to send data to node onto, DO NOT SPECIFY ADDRESS, it throws an error as we are communicating on local
+    this.clientSock.bind(parseInt(this.listeningPort));
+    console.log(parseInt(this.listeningPort));
   }
 
   messageHandler(message, remote){
     console.log("Received message from " + remote.address + ':' + remote.port +' - ' + message);
+    
     // send to renderer
-
     appMainWindow.get().webContents.send('asynchronous-reply', 'received udp message:' + message);
 
     let channel  = codeToChannel[message.toString()[0]];
-
     if(!channel) channel = 'received-udp-message';
 
     appMainWindow.get().webContents.send(channel.toString(), JSON.stringify({
@@ -77,22 +77,14 @@ class UdpComms {
   }
 
   sendUDPMessage(message){
-    let sender = dgram.createSocket('udp4');
-
-    let bufferMessage = new Buffer(message);
-
+    let bufferMessage = Buffer.from(message);
     appMainWindow.get().webContents.send('asynchronous-reply', 'sending udp message');
-
-    sender.send(bufferMessage, 0, bufferMessage.length, this.remotePort, this.remoteIP, (err, bytes) => {
+    this.clientSock.send(bufferMessage, this.clientSock.address().port,  (err, bytes) => {
       if(err !== null){
         console.log('error:' + err.message);
-        sender.close();
-        return "fail";
-        // throw err;
+        this.clientSock.close();
       }
       console.log('UDP message sent to ' + this.remoteIP +':'+ this.remotePort);
-      sender.close();
-      return "success"; // message to relay back to renderer
     })
 
     return "success"; // a bit jank
