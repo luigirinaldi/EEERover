@@ -38,6 +38,10 @@ class App extends React.Component {
       changeIP: this.updateIP,
     };
 
+   
+  }
+
+  componentDidMount(){
     // update on load of app to make sure on main process they are initialized the same as here
     ipcRenderer.send('change-udp-settings', {
       localIP: this.state.localIP,

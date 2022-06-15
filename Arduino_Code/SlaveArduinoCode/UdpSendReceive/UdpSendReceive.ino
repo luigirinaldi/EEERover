@@ -52,7 +52,7 @@ void printWifiStatus()
 }
 
 void udpHandleMove(char packetBuffer[255]){
-  if(packetBuffer[1]=='B' && packetBuffer[4]=='A' && packetBuffer[8]=='R'){ // mB__A___R
+  if(packetBuffer[1]=='J' && packetBuffer[4]=='A' && packetBuffer[8]=='B'){ // mB__A___R
     // direction info
     SendDetail[1] = packetBuffer[2];
     SendDetail[2] = packetBuffer[3];
@@ -65,13 +65,13 @@ void udpHandleMove(char packetBuffer[255]){
     Wire.write(SendDetail);
     Wire.endTransmission();
 
-    Serial.println(SendDetail);
+    // Serial.println(SendDetail);
 
     Udp.beginPacket(Udp.remoteIP(), upperPort);
     Udp.write('m');
     Udp.write(SendDetail);  
     Udp.endPacket();
-  } else if (packetBuffer[1]=='B' && packetBuffer[5]=='A' && packetBuffer[15]=='R'){ //mB___A_________R
+  } else if (packetBuffer[1]=='J' && packetBuffer[5]=='A' && packetBuffer[15]=='B'){ //mB___A_________R
     // direction codes
     SendDetail2[1] = packetBuffer[2];
     SendDetail2[2] = packetBuffer[3];
@@ -82,7 +82,7 @@ void udpHandleMove(char packetBuffer[255]){
     SendDetail2[7] = packetBuffer[8];
     SendDetail2[8] = packetBuffer[9];
     SendDetail2[9] = packetBuffer[10];
-    SendDetail2[10] = packetBuffer[12];
+    SendDetail2[10] = packetBuffer[11];
     SendDetail2[11] = packetBuffer[12];
     SendDetail2[12] = packetBuffer[13];
     SendDetail2[13] = packetBuffer[14];
@@ -91,7 +91,7 @@ void udpHandleMove(char packetBuffer[255]){
     Wire.write(SendDetail2);
     Wire.endTransmission();
 
-    Serial.println(SendDetail2);
+    // Serial.println(SendDetail2);
 
     Udp.beginPacket(Udp.remoteIP(), upperPort);
     Udp.write('m'); //code to signal it is a motor message
@@ -106,13 +106,13 @@ void udpHandleMove(char packetBuffer[255]){
 }
 
 void udpHandleMessage(int packetSize){
-    Serial.print(F("Received packet of size "));
-    Serial.println(packetSize);
-    Serial.print(F("From "));
-    IPAddress remoteIp = Udp.remoteIP();
-    Serial.print(remoteIp);
-    Serial.print(F(", port "));
-    Serial.println(Udp.remotePort());
+    // Serial.print(F("Received packet of size "));
+    // Serial.println(packetSize);
+    // Serial.print(F("From "));
+    // IPAddress remoteIp = Udp.remoteIP();
+    // Serial.print(remoteIp);
+    // Serial.print(F(", port "));
+    // Serial.println(Udp.remotePort());
 
     // read the packet into packetBufffer
     int len = Udp.read(packetBuffer, 255);
@@ -121,8 +121,8 @@ void udpHandleMessage(int packetSize){
       packetBuffer[len] = 0;
     }
 
-    Serial.println(F("Contents:"));
-    Serial.println(packetBuffer);
+    // Serial.println(F("Contents:"));
+    // Serial.println(packetBuffer);
 
     switch(packetBuffer[0]){
       case 'm': //movement message

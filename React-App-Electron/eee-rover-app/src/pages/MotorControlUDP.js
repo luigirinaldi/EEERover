@@ -11,7 +11,7 @@ import { DiscreteControl, AnalogueControl } from '../components/MotorControlComp
 const electron = window.require('electron');
 const { ipcRenderer } = electron;
 
-const CONTROLLER_POLLING_RATE = 150; // in milliseconds 
+const CONTROLLER_POLLING_RATE = 50; // in milliseconds 
 class MotorControlUDP extends React.Component {
   //to time how long each udp requests takes:
     // the code sent is saved with the start time of the request 
@@ -36,40 +36,12 @@ class MotorControlUDP extends React.Component {
     this.sendCode = this.sendCode.bind(this);
     this.testConnection = this.testConnection.bind(this);
 
-    ipcRenderer.on('received-udp-message', (event, arg) => {
-      // console.log(arg);
-      let stopDate = new Date();
-      let message = JSON.parse(arg);
-      console.log(message);
-      console.log("Received message from " + message.ip + ':' + message.port +' - ' + message.message);
-
-      if(message.message[0] === 'J'){ // enough to check if it is a motor control message
-        // TODO timing the request
-      } else {
-        this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);
-      }
-    });
-
-    ipcRenderer.on('received-test-message', (event, arg) => {
-      // console.log(arg);
-      let stopDate = new Date();
-      let message = JSON.parse(arg);
-      console.log("Received test message from " + message.ip + ':' + message.port +' - ' + message.message);
-  
-      console.log(this); //why is it undefined???
-      if(this.sentTests.length > 0){
-        let elapsedTime = (stopDate - this.sentTests.shift())/1000; //get first value and remove it
-        this.addResponse(stopDate.toLocaleTimeString('it-IT'), elapsedTime, message.message);        
-      } else {
-        this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);  
-      }
-    });   
+        
   }
-
 
   componentWillUnmount(){
     ipcRenderer.removeAllListeners('received-udp-message');
-    // ipcRenderer.removeListener('received-test-message', this.handleTestMessage);
+    ipcRenderer.removeAllListeners('received-test-message');
     ipcRenderer.removeAllListeners('received-move-message');
     ipcRenderer.removeAllListeners('received-error-message');
     ipcRenderer.removeAllListeners('received-data-message');
@@ -95,15 +67,12 @@ class MotorControlUDP extends React.Component {
 
     let udpStatus = ipcRenderer.sendSync('send-udp-message',msg);
     let startDate = new Date();
-    console.log(udpStatus);
 
     if(udpStatus === 'fail'){
       console.log('Failed connection test');
     } else if (udpStatus === 'success'){
       this.sentTests.push(startDate);
     } 
-
-    console.log(this.sentTests);
   }
 
   updateMotorResponse(message){
@@ -122,6 +91,57 @@ class MotorControlUDP extends React.Component {
   }
 
   componentDidMount() {
+
+    ipcRenderer.on('received-test-message', (event, arg) => {
+      // console.log(arg);
+      let stopDate = new Date();
+      let message = JSON.parse(arg);
+
+      // console.log("Received test message from " + message.ip + ':' + message.port +' - ' + message.message);
+      
+      if(this.sentTests.length > 0){
+        let elapsedTime = (stopDate - this.sentTests.shift())/1000; //get first value and remove it
+        this.addResponse(stopDate.toLocaleTimeString('it-IT'), elapsedTime, message.message);        
+      } else {
+        this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);  
+      }
+    });   
+
+    ipcRenderer.on('received-move-message', (event, arg) => {
+      // console.log(arg);
+      let stopDate = new Date();
+      let message = JSON.parse(arg);
+
+      // console.log("Received move message from " + message.ip + ':' + message.port +' - ' + message.message);
+      
+      if(this.sentCodes.length > 0){
+        let elapsedTime = ''; 
+
+        for(let i = 0; i < this.sentCodes.length; i++){
+          if(this.sentCodes[i].code === message.message){
+            elapsedTime = (stopDate - this.sentCodes[i].startTime)/1000; //get time
+            this.sentCodes.splice(i, 1); //remove element from array
+            i = this.sentCodes.length; //terminate loop
+          } 
+        }
+
+      
+        this.addResponse(stopDate.toLocaleTimeString('it-IT'), elapsedTime, message.message);        
+      } else {
+        this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);  
+      }
+    });
+
+    ipcRenderer.on('received-udp-message', (event, arg) => {
+      // console.log(arg);
+      let stopDate = new Date();
+      let message = JSON.parse(arg);
+      console.log(message);
+      console.log("Received message from " + message.ip + ':' + message.port +' - ' + message.message);
+
+      this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);
+    });
+
     // set the destination url here becasue context is not yet defined in constructor
     this.destinationURL = "http://" + this.context.roverIP + "/";
 

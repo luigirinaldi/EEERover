@@ -63,7 +63,7 @@ class UdpComms {
     console.log("Received message from " + remote.address + ':' + remote.port +' - ' + message);
     // send to renderer
 
-    appMainWindow.get().webContents.send('asynchronous-reply', 'received udp message:' + message);
+    // appMainWindow.get().webContents.send('asynchronous-reply', 'received udp message:' + message);
 
     let channel  = codeToChannel[message.toString()[0]];
 
@@ -81,7 +81,7 @@ class UdpComms {
 
     let bufferMessage = new Buffer(message);
 
-    appMainWindow.get().webContents.send('asynchronous-reply', 'sending udp message');
+    // appMainWindow.get().webContents.send('asynchronous-reply', 'sending udp message');
 
     sender.send(bufferMessage, 0, bufferMessage.length, this.remotePort, this.remoteIP, (err, bytes) => {
       if(err !== null){
