@@ -1,4 +1,6 @@
 const electron = require('electron');
+const { writeFile, readFile, readFileSync, writeFileSync } = require('fs');
+
 // Module to control application life.
 const app = electron.app;
 // Module to create native browser window.
@@ -8,6 +10,9 @@ const UdpComms = require('./udpStuff/UdpClass').UdpComms;
 
 // Import the necessary Node modules.
 const nodePath = require('path');
+const { fileURLToPath } = require('url');
+const FullDebugPath = electron.app.getPath('userData') + '/DebugLogs.json';
+
 // import Applicatino modules
 const appMainWindow = require(nodePath.join(__dirname, 'main-window'));
 
@@ -52,15 +57,18 @@ app.on('activate', function () {
 });
 
 // Commuincation between main process (this one) and renderer (react)
-ipcMain.on('send-udp-message', (event, arg) => {
+ipcMain.handle('send-udp-message', (event, arg) => {
     console.log(arg)
 
     let response = UDP.sendUDPMessage(arg, event);
+    
     console.log(response);
-    event.returnValue = response;
+    return response;
+    
+    //event.reply('asynchronous-reply', 'success');
 });
 
-ipcMain.on('change-udp-settings', (event, arg) => {
+ipcMain.handle('change-udp-settings', (event, arg) => {
     UDP.changeUDPListener(arg.listeningPort);
     UDP.remoteIP = arg.remoteIP;
     UDP.remotePort = arg.remotePort;
@@ -68,3 +76,60 @@ ipcMain.on('change-udp-settings', (event, arg) => {
 
     event.reply('asynchronous-reply', 'Changed UDP settings');
 });
+
+function CreateEmptyFile(){
+    writeFileSync(FullDebugPath, JSON.stringify(''));
+    console.log("Created Empty File");
+}
+
+ipcMain.handle('update-logs', (event, args) => {
+    readFile(FullDebugPath, (error, data) => {
+
+        if(error){
+            if(error.errno == -4058){
+                console.log("No file found Creating in directory: \n", FullDebugPath);
+                CreateEmptyFile();
+            }else{
+                console.log("An error has occoured while creating the debug file", error);
+                return;
+            }
+        }
+
+        console.log('Data Read successfully');
+
+        try{
+            data = JSON.parse(data);
+            if(args.sentMotorMessages.length > 0){
+                for(let i=0; i < args.sentMotorMessages.length; i++){
+                    data.sentMotorMessages.messages.push(args.sentMotorMessages[i]);
+                }
+            }
+            if(args.sentTestMessages.length > 0){
+                for(let i=0; i < args.sentTestMessages.length; i++){
+                    data.sentTestMessages.messages.push(args.sentTestMessages[i]);
+                }
+            }
+
+        }catch{
+            data = {sentMotorMessages: {messages: []}, sentTestMessages: {messages: []}};
+        }
+
+        writeFile(FullDebugPath, JSON.stringify(data), (err) => {
+            if(err){
+                console.log('An Error occoured', err);
+                return;
+            }
+            console.log('Data written successfully');
+        })
+    })
+    response = "Successful Read and Write";
+    return response;
+})
+
+ipcMain.handle('read-logs', (event, args) => {
+
+})
+
+ipcMain.handle('clear-logs', (event, args) => {
+
+})
