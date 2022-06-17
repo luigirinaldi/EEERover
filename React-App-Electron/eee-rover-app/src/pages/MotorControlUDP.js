@@ -10,7 +10,7 @@ import { DiscreteControl, AnalogueControl } from '../components/MotorControlComp
 const electron = window.require('electron');
 const { ipcRenderer } = electron;
 
-const CONTROLLER_POLLING_RATE = 50; // in milliseconds 
+const CONTROLLER_POLLING_RATE = 150; // in milliseconds 
 class MotorControlUDP extends React.Component {
   //to time how long each udp requests takes:
     // the code sent is saved with the start time of the request 

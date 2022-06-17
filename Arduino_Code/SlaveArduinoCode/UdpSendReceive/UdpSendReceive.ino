@@ -38,22 +38,61 @@ const int groupNumber = 15;
 const int i2c_slave_motor = 4;
 
 // interrupt pins for measuring frequencies:
-const int infraredPin = 0;
+const int infraredPin = 2;
+const int acousticPin = 3;
+const int radioSignalPin = 8;
+const int radioCarrierPin = 6;
 
 // globals for sensor measurement
-const int samplingPeriod = 500; //measure the frequency every second
+const int samplingPeriod = 200; //measure the frequency every second
 unsigned long prevTime = 0; //measure elapsed time, should last up to 72 hours
 
 volatile int infraredCounter = 0;
 double infraredFreq = 0;
+
+volatile int acousticCounter = 0;
+double acousticFreq = 0;
+
+volatile int radioSignalCounter = 0;
+volatile int radioCarrierCounter = 0;
+
+bool countCarrier = false;
+
+double radioSignalFreq = 0;
+double radioCarrieFreq = 0;
 
 // Interrupt Service Routines
 void infraredISR(){
   infraredCounter++;
 }
 
+void acousticISR(){
+  acousticCounter++;
+}
+
+void radioSignalISR(){
+  radioSignalCounter++;
+  countCarrier = true;
+}
+
+void radioSignalFalling(){
+  countCarrier = false;
+}
+
+void radioCarrierISR(){
+  if(countCarrier){
+    radioCarrierCounter++;
+  }
+}
+
 void attachISRs(){
+
   attachInterrupt(digitalPinToInterrupt(infraredPin), infraredISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(acousticPin), acousticISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(radioSignalPin), radioSignalISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(radioSignalPin), radioSignalISR, FALLING); // to detect falling edge and stop measuring the carrier frequency
+  attachInterrupt(digitalPinToInterrupt(radioCarrierPin), radioCarrierISR, RISING);
+
 }
 
 
@@ -248,10 +287,30 @@ void loop()
 
   //sensor measuremt
   if(millis() - prevTime >= samplingPeriod){
+    prevTime = millis();
     //measure stuff
     infraredFreq = (double(infraredCounter)/samplingPeriod)* 1000;
     infraredCounter = 0;
-    prevTime = millis();
+
+    acousticFreq = (double(acousticCounter)/samplingPeriod)* 1000;
+    acousticCounter = 0;
+
+    radioSignalFreq = (double(radioSignalCounter)/samplingPeriod)* 1000;
+    radioSignalCounter = 0;
+    radioCarrieFreq = (double(radioCarrierCounter)/samplingPeriod)* 1000;
+    radioCarrierCounter = 0;
+
+    Serial.print("Acoustic freq: ");
+    Serial.print(acousticFreq);
+    Serial.print("Hz ");
+
+    Serial.print("Radio Signal freq: ");
+    Serial.print(radioSignalFreq);
+    Serial.print("Hz ");
+
+    Serial.print("Radio Carrier freq: ");
+    Serial.print(radioCarrieFreq);
+    Serial.print("Hz ");  
 
     Serial.print("infrared freq: ");
     Serial.print(infraredFreq);

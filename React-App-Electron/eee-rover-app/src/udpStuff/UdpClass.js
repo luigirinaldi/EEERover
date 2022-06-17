@@ -77,7 +77,7 @@ class UdpComms {
 
     let bufferMessage = Buffer.from(message);
     //appMainWindow.get().webContents.invoke('asynchronous-reply', 'sending udp message');
-    this.clientSock.send(bufferMessage, this.clientSock.address().port,  (err, bytes) => {
+    this.clientSock.send(bufferMessage, this.remotePort, this.remoteIP,  (err, bytes) => {
 
       if(err !== null){
         console.log('error:' + err.message);
