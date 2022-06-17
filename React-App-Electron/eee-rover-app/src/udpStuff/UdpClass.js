@@ -16,11 +16,9 @@ const codeToChannel = {
 }
 
 class UdpComms {
+
   constructor(){
-    console.log("constructing new UDP class");
-
     this.listeningPort = '52113';
-
     this.remoteIP = '172.20.10.5';
     this.remotePort = '1883';
 
@@ -57,15 +55,13 @@ class UdpComms {
 
     //Set the local port to send data to node onto, DO NOT SPECIFY ADDRESS, it throws an error as we are communicating on local
     this.clientSock.bind(parseInt(this.listeningPort));
-    console.log(parseInt(this.listeningPort));
   }
 
   messageHandler(message, remote){
     console.log("Received message from " + remote.address + ':' + remote.port +' - ' + message);
     
     // send to renderer
-
-    // appMainWindow.get().webContents.send('asynchronous-reply', 'received udp message:' + message);
+    //appMainWindow.get().webContents.invoke('asynchronous-reply', 'received udp message:' + message);
 
     let channel  = codeToChannel[message.toString()[0]];
     if(!channel) channel = 'received-udp-message';
@@ -78,17 +74,20 @@ class UdpComms {
   }
 
   sendUDPMessage(message){
+
     let bufferMessage = Buffer.from(message);
-    appMainWindow.get().webContents.send('asynchronous-reply', 'sending udp message');
+    //appMainWindow.get().webContents.invoke('asynchronous-reply', 'sending udp message');
     this.clientSock.send(bufferMessage, this.clientSock.address().port,  (err, bytes) => {
+
       if(err !== null){
         console.log('error:' + err.message);
         this.clientSock.close();
       }
+
       console.log('UDP message sent to ' + this.remoteIP +':'+ this.remotePort);
     })
 
-    return "success"; // a bit jank
+    return 'success'; // a bit jank
   }
 
   setWindow(windowWebContents){

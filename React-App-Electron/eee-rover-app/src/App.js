@@ -34,26 +34,17 @@ class App extends React.Component {
       roverIP: "172.20.10.5",
       changeIP: this.updateIP,
     };
-
-   
   }
 
   componentDidMount(){
-    // update on load of app to make sure on main process they are initialized the same as here
-    ipcRenderer.send('change-udp-settings', {
-      localIP: this.state.localIP,
-      listeningPort: '52113',
-      remoteIP: this.state.roverIP,
-      remotePort: '1883'
-    })
-
     // Page wide listener for messages coming from main process
     ipcRenderer.on('asynchronous-reply', (event, arg) => {
-      console.log("Main: " + arg) 
+      console.log("Main: " + arg)
     })
   }
 
   componentWillUnmount(){
+  //  ipcRenderer.sendSync('update-logs', {test: '192.2', port: 5112});
     ipcRenderer.removeAllListeners('asynchronous-reply');
   }
 

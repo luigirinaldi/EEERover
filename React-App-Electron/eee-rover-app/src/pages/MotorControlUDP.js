@@ -6,7 +6,6 @@ import '../css/motorControl.css';
 import { DebugOutput, ResponseElement } from '../components/DebugOutput';
 import { DiscreteControl, AnalogueControl } from '../components/MotorControlComponents';
 
-
 // to interact with main process
 const electron = window.require('electron');
 const { ipcRenderer } = electron;
@@ -17,16 +16,19 @@ class MotorControlUDP extends React.Component {
     // the code sent is saved with the start time of the request 
     // upon receiving udp packet code is compared and time taken is found
 
-  constructor(props){
+    sentMotorMessages = []; //array of codes and start times of outgoing motor messages
+    recievedMotorMessages = []; //recieved motor data with recieved times
+    sentTestMessages = []; //array of test messages and there start times
+    recievedTestMessages = []; //contains the response from a test message and the time it took and recieved
+    settingMessages = []; //array of changed setting instances and there times
+    
+    constructor(props){
     super(props)
     
     this.state = {
       controllerAvailable: false,
       responseMessage: [], //array of ResponseElements
     }
-
-    this.sentCodes = []; //array of codes and start times
-    this.sentTests = []; // array of start times
 
     // timing the requests 
     this.endDate = new Date();
@@ -35,43 +37,42 @@ class MotorControlUDP extends React.Component {
     // this.updateResponse = this.updateResponse.bind(this);
     this.sendCode = this.sendCode.bind(this);
     this.testConnection = this.testConnection.bind(this);
-
-        
   }
 
-  componentWillUnmount(){
-    ipcRenderer.removeAllListeners('received-udp-message');
-    ipcRenderer.removeAllListeners('received-test-message');
-    ipcRenderer.removeAllListeners('received-move-message');
-    ipcRenderer.removeAllListeners('received-error-message');
-    ipcRenderer.removeAllListeners('received-data-message');
-
+  async componentWillUnmount(){
+    ipcRenderer.removeAllListeners();
+    let DataManagmentResponse = await ipcRenderer.invoke('update-logs', {sentMotorMessages: this.sentMotorMessages, sentTestMessages: this.sentTestMessages});
+    console.log(DataManagmentResponse);
     clearInterval(this.gamepadTimer);
   }
 
-  sendCode(code){
+  async sendCode(code){
     // movement code therefore prefixed by m
     let msg = 'm' + code;
-    let udpStatus = ipcRenderer.sendSync('send-udp-message',msg);
+    let udpStatus = await ipcRenderer.invoke('send-udp-message',msg);
+    console.log(udpStatus);
     let startDate = new Date();
 
-    if(udpStatus === 'fail'){
+    if(udpStatus == 'fail'){
       console.log('Failed sending code: ' + msg);
-    } else if (udpStatus === 'success'){
-      this.sentCodes.push({code:code, startTime: startDate});
+    } else if (udpStatus == 'success'){
+      console.log(this.sentMotorMessages);
+      (this.sentMotorMessages).push({"code" : code, "startTime": startDate});
+      console.log(this.sentMotorMessages);
     }    
   }
 
   testConnection(){    
     let msg = 't'; //test connection message
 
-    let udpStatus = ipcRenderer.sendSync('send-udp-message',msg);
+    let udpStatus = ipcRenderer.invoke('send-udp-message',msg);
     let startDate = new Date();
-
+    console.log(udpStatus);
     if(udpStatus === 'fail'){
       console.log('Failed connection test');
     } else if (udpStatus === 'success'){
-      this.sentTests.push(startDate);
+      console.log("test");
+      this.sentTestMessages.push(startDate);
     } 
   }
 
@@ -99,8 +100,8 @@ class MotorControlUDP extends React.Component {
 
       // console.log("Received test message from " + message.ip + ':' + message.port +' - ' + message.message);
       
-      if(this.sentTests.length > 0){
-        let elapsedTime = (stopDate - this.sentTests.shift())/1000; //get first value and remove it
+      if(this.sentTestMessages.length > 0){
+        let elapsedTime = (stopDate - this.sentTestMessages.shift())/1000; //get first value and remove it
         this.addResponse(stopDate.toLocaleTimeString('it-IT'), elapsedTime, message.message);        
       } else {
         this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);  
@@ -111,20 +112,20 @@ class MotorControlUDP extends React.Component {
       // console.log(arg);
       let stopDate = new Date();
       let message = JSON.parse(arg);
+      console.log(this.sentMotorMessages.length);
 
-      // console.log("Received move message from " + message.ip + ':' + message.port +' - ' + message.message);
+      console.log("Received move message from " + message.ip + ':' + message.port +' - ' + message.message);
       
-      if(this.sentCodes.length > 0){
+      if(this.sentMotorMessages.length > 0){
         let elapsedTime = ''; 
 
-        for(let i = 0; i < this.sentCodes.length; i++){
-          if(this.sentCodes[i].code === message.message){
-            elapsedTime = (stopDate - this.sentCodes[i].startTime)/1000; //get time
-            this.sentCodes.splice(i, 1); //remove element from array
-            i = this.sentCodes.length; //terminate loop
+        for(let i = 0; i < this.sentMotorMessages.length; i++){
+          if(this.sentMotorMessages[i].code === message.message){
+            elapsedTime = (stopDate - this.sentMotorMessages[i].startTime)/1000; //get time
+            this.sentMotorMessages.splice(i, 1); //remove element from array
+            i = this.sentMotorMessages.length; //terminate loop
           } 
         }
-
       
         this.addResponse(stopDate.toLocaleTimeString('it-IT'), elapsedTime, message.message);        
       } else {
