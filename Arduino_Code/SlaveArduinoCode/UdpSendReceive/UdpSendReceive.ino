@@ -27,12 +27,35 @@ char ReplyBuffer[] = "ACK";      // a string to send back
 char SendDetail[] = "J00A000B";
 char SendDetail2[] = "J000A000000000B";
 
+
+// global UDP object
+IPAddress pcIP; //global ip address op pc needed to send responses back without message
 WiFiUDP Udp;
 
 char ssid[] = "iPhone di Luigi";        // your network SSID (name)
 char pass[] = "passwordThatsVeryStrong";
 const int groupNumber = 15;
 const int i2c_slave_motor = 4;
+
+// interrupt pins for measuring frequencies:
+const int infraredPin = 0;
+
+// globals for sensor measurement
+const int samplingPeriod = 500; //measure the frequency every second
+unsigned long prevTime = 0; //measure elapsed time, should last up to 72 hours
+
+volatile int infraredCounter = 0;
+double infraredFreq = 0;
+
+// Interrupt Service Routines
+void infraredISR(){
+  infraredCounter++;
+}
+
+void attachISRs(){
+  attachInterrupt(digitalPinToInterrupt(infraredPin), infraredISR, RISING);
+}
+
 
 void printWifiStatus()
 {
@@ -51,8 +74,20 @@ void printWifiStatus()
   Serial.println(F(" dBm"));
 }
 
+void sendUDPData(){
+  char IRbuff[20];
+  sprintf(IRbuff, "%5.2f", infraredFreq);
+  Serial.print("pc IP:");
+  Serial.println(static_cast<IPAddress>(pcIP));
+  Udp.beginPacket(pcIP, upperPort);
+  Udp.write('d');
+  Udp.write("IR ");
+  Udp.write(IRbuff);  
+  Udp.endPacket();
+}
+
 void udpHandleMove(char packetBuffer[255]){
-  if(packetBuffer[1]=='J' && packetBuffer[4]=='A' && packetBuffer[8]=='B'){ // mB__A___R
+  if(packetBuffer[1]=='J' && packetBuffer[4]=='A' && packetBuffer[8]=='B'){ // mJ__A___B
     // direction info
     SendDetail[1] = packetBuffer[2];
     SendDetail[2] = packetBuffer[3];
@@ -71,7 +106,7 @@ void udpHandleMove(char packetBuffer[255]){
     Udp.write('m');
     Udp.write(SendDetail);  
     Udp.endPacket();
-  } else if (packetBuffer[1]=='J' && packetBuffer[5]=='A' && packetBuffer[15]=='B'){ //mB___A_________R
+  } else if (packetBuffer[1]=='J' && packetBuffer[5]=='A' && packetBuffer[15]=='B'){ //mJ___A_________B
     // direction codes
     SendDetail2[1] = packetBuffer[2];
     SendDetail2[2] = packetBuffer[3];
@@ -129,8 +164,15 @@ void udpHandleMessage(int packetSize){
         udpHandleMove(packetBuffer);
         break; //not really needed
       case 't': //test message
-        Udp.beginPacket(Udp.remoteIP(), upperPort);
-        Udp.write("tSuccessful connection to JABA Rover");  
+        char IPbuff[20];
+        pcIP = Udp.remoteIP();
+        Serial.print("Ip from remote: ");
+        Serial.println(static_cast<IPAddress>(pcIP));
+        // sprintf(IPbuff, "", pcIP , );
+        // Serial.println(IPbuff);
+        Udp.beginPacket(pcIP, upperPort);
+        Udp.write("tSuccessful connection to JABA Rover from:");  
+        // Udp.write(IPbuff);
         Udp.endPacket();
         break;
       default:
@@ -186,10 +228,16 @@ void setup()
 
   
   Wire.begin();
+
+  attachISRs();
+  prevTime = millis(); //initialize at the start of setup
 }
+
+
 
 void loop()
 {
+  // UDP listening
   // if there's data available, read a packet
   int packetSize = Udp.parsePacket();
   //Serial.println("Listening");
@@ -197,4 +245,19 @@ void loop()
   {
     udpHandleMessage(packetSize);    
   }
+
+  //sensor measuremt
+  if(millis() - prevTime >= samplingPeriod){
+    //measure stuff
+    infraredFreq = (double(infraredCounter)/samplingPeriod)* 1000;
+    infraredCounter = 0;
+    prevTime = millis();
+
+    Serial.print("infrared freq: ");
+    Serial.print(infraredFreq);
+    Serial.println("Hz");
+
+    sendUDPData();
+  }
+
 }
