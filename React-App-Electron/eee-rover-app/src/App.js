@@ -9,15 +9,11 @@ import { IpContext } from './context/ip-context';
 import Home from './pages/Home';
 import Debug from './pages/Debug';
 import ErrorLogs from './pages/ErrorLogs';
-import MotorControl from './pages/MotorControl';
 import Settings from './pages/Settings';
-import MotorControlUDP from './pages/MotorControlUDP';
+import MotorControl from './pages/MotorControl';
 
 const electron = window.require('electron');
 const { ipcRenderer } = electron;
-
-
-
 
 class App extends React.Component {
 
@@ -57,7 +53,6 @@ class App extends React.Component {
               <Route exact path='/' element={<Home/>} />
               <Route path='/Debug' element={<Debug/>} />
               <Route path='/MotorControl' element={<MotorControl/>} />
-              <Route path='/MotorControlUDP' element={<MotorControlUDP/>} />
               <Route path='/ErrorLogs' element={<ErrorLogs/>} />
               <Route path='/Settings' element={<Settings/>} />
             </Routes>

@@ -1,20 +1,17 @@
 const electron = require('electron');
-const { writeFile, readFile, readFileSync, writeFileSync } = require('fs');
+const { writeFile, readFile, writeFileSync } = require('fs');
 
 // Module to control application life.
 const app = electron.app;
-// Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow;
 
-const UdpComms = require('./udpStuff/UdpClass').UdpComms;
+
+const UdpComms = require('./UdpClass').UdpComms;
 
 // Import the necessary Node modules.
-const nodePath = require('path');
-const { fileURLToPath } = require('url');
 const FullDebugPath = electron.app.getPath('userData') + '/DebugLogs.json';
 
 // import Applicatino modules
-const appMainWindow = require(nodePath.join(__dirname, 'main-window'));
+const appMainWindow = require('./main-window');
 
 //prevent garbage collection:
 let mainWindow = null;

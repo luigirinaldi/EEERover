@@ -6,7 +6,7 @@ const { json } = require('stream/consumers');
 const { domainToUnicode } = require('url');
 
 // Import the necessary Application modules.
-const appMainWindow = require(nodePath.join(__dirname, '../main-window'));
+const appMainWindow = require('./main-window');
 
 const codeToChannel = {
   't': 'received-test-message',

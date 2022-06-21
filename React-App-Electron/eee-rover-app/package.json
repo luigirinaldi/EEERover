@@ -15,14 +15,14 @@
     "styled-components": "^5.3.5",
     "web-vitals": "^2.1.4"
   },
-  "main": "src/electron-starter.js",
+  "main": "src/MainProcess/electron-starter.js",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "electron": "electron .",
-    "electron-start": "node src/electron-wait-react",
+    "electron-start": "node src/MainProcess/electron-wait-react",
     "react-start": "react-scripts start"
   },
   "eslintConfig": {
