@@ -1,6 +1,5 @@
 import React from 'react';
 import PageContainer from './PageContainer';
-
 import { IpContext } from '../context/ip-context';
 import '../css/motorControl.css';
 import { DebugOutput, ResponseElement } from '../components/DebugOutput';
@@ -41,21 +40,18 @@ class MotorControl extends React.Component {
 
   async componentWillUnmount(){
     ipcRenderer.removeAllListeners();
-    let DataManagmentResponse = await ipcRenderer.invoke('update-logs', {sentMotorMessages: this.sentMotorMessages, sentTestMessages: this.sentTestMessages});
-    console.log(DataManagmentResponse);
     clearInterval(this.gamepadTimer);
   }
 
   async sendCode(code){
     // movement code therefore prefixed by m
     let msg = 'm' + code;
-    let udpStatus = await ipcRenderer.invoke('send-udp-message',msg);
-    console.log(udpStatus);
+    let udpStatus = await ipcRenderer.invoke('send-udp-message', msg);
     let startDate = new Date();
-
-    if(udpStatus == 'fail'){
+    
+    if(udpStatus === 'fail'){
       console.log('Failed sending code: ' + msg);
-    } else if (udpStatus == 'success'){
+    } else if (udpStatus === 'success'){
       console.log(this.sentMotorMessages);
       (this.sentMotorMessages).push({"code" : code, "startTime": startDate});
       console.log(this.sentMotorMessages);
@@ -76,14 +72,6 @@ class MotorControl extends React.Component {
     } 
   }
 
-  updateMotorResponse(message){
-    this.endDate = new Date(); //not very accurate but other methods break the response stuff
-    let elapsedTime = (this.endDate - this.startDate)/1000;
-    let time = this.endDate.getHours() + ":" + this.endDate.getMinutes() + ":" + this.endDate.getSeconds();
-
-    this.addResponse(time, elapsedTime, message);
-  }
-
   addResponse(time, timeTaken, message){
     // appending to response container
     this.setState({ 
@@ -94,12 +82,10 @@ class MotorControl extends React.Component {
   componentDidMount() {
 
     ipcRenderer.on('received-test-message', (event, arg) => {
-      // console.log(arg);
       let stopDate = new Date();
       let message = JSON.parse(arg);
 
       // console.log("Received test message from " + message.ip + ':' + message.port +' - ' + message.message);
-      
       if(this.sentTestMessages.length > 0){
         let elapsedTime = (stopDate - this.sentTestMessages.shift())/1000; //get first value and remove it
         this.addResponse(stopDate.toLocaleTimeString('it-IT'), elapsedTime, message.message);        

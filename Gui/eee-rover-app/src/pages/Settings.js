@@ -5,8 +5,6 @@ import { IpContext } from '../context/ip-context';
 const electron = window.require('electron');
 const { ipcRenderer } = electron;
 
-
-
 class IpInputBox extends React.Component {
   constructor(props) {
     super(props);
@@ -34,7 +32,7 @@ class IpInputBox extends React.Component {
     this.props.updateIpFunc(this.state.roverIP); //update global context of IP
  
     // set values for UDP object
-    ipcRenderer.invoke('change-udp-settings', {
+    ipcRenderer.send('change-udp-settings', {
       listeningPort: '52113',
       remoteIP: this.state.roverIP,
       remotePort: '1883'

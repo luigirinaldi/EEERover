@@ -1,14 +1,8 @@
 const electron = require('electron');
-const { writeFile, readFile, writeFileSync } = require('fs');
 
-// Module to control application life.
-const app = electron.app;
+const { ipcMain } = electron;
 
-
-const UdpComms = require('./UdpClass').UdpComms;
-
-// Import the necessary Node modules.
-const FullDebugPath = electron.app.getPath('userData') + '/DebugLogs.json';
+let dgram = require('dgram');
 
 // import Applicatino modules
 const appMainWindow = require('./main-window');
@@ -16,18 +10,106 @@ const appMainWindow = require('./main-window');
 //prevent garbage collection:
 let mainWindow = null;
 
-console.log(UdpComms);
+// Module to control application life.
+const app = electron.app;
+console.log(app.getPath('userData'));
 
-const { ipcMain } = electron;
+const codeToChannel = {
+    't': 'received-test-message',
+    'm': 'received-move-message',
+    'e': 'received-error-message',
+    'd': 'received-data-message',
+  }
+  
+class UdpComms {
+
+    constructor(){
+        this.listeningPort = '52113';
+        this.remoteIP = '172.20.10.5';
+        this.remotePort = '1883';
+
+        this.initializeUDPListener(); //intialize listener
+    }
+
+    // declare and instantiate listener socket
+    initializeUDPListener(){
+
+        //Create the Udp listener
+        console.log('initializing udp listener ---------------------------|');
+        this.clientSock = dgram.createSocket('udp4');
+
+        //Handles any recieved messages from the ipcRender
+        ipcMain.on('message', this.messageHandler);
+
+        //Handle and print errors from the ipcRender
+        ipcMain.on('error', err => {
+            console.log("Node incurred an " + err);
+            ipcMain.close();
+        })
+
+        ipcMain.handle('send-udp-message', (event, arg) => {
+            return this.sendUDPMessage(arg);
+        });
+
+        ipcMain.on('change-udp-settings', (event, arg) => {
+            this.remoteIP = arg.remoteIP;
+            this.remotePort = arg.remotePort;
+        });
+        
+        ipcMain.handle('read-logs', (event, args) => {
+        
+        })
+        
+        ipcMain.handle('clear-logs', (event, args) => {
+        
+        })
+
+    }
+
+    messageHandler(message, remote){
+        console.log("Received message from " + remote.address + ':' + remote.port +' - ' + message);
+
+        let channel  = codeToChannel[message.toString()[0]];
+        if(!channel) channel = 'received-udp-message';
+
+        appMainWindow.get().webContents.send(channel.toString(), JSON.stringify({
+        message:message.toString().slice(1), //remove first bit
+        ip: remote.address,
+        port: remote.port
+        }));
+    }
+
+    sendUDPMessage(message){
+        let bufferMessage = Buffer.from(message);
+        this.clientSock.send(bufferMessage, this.remotePort, this.remoteIP, (err, bytes) => {
+        if(err !== null){
+
+            if(err.message.includes('getaddrinfo')){
+                console.log('Incorrect Adress Format')
+
+            }else{
+                console.log('error:' + err);
+                this.clientSock.close();
+            }
+        }
+        console.log('UDP message sent to ' + this.remoteIP +':'+ this.remotePort);
+        });
+
+        return 'success'; //I cant seem to work out how to get this error checking working so rn it always returns success, not a massive issue but still would be nice
+    }
+
+    setWindow(windowWebContents){
+        this.webContents = windowWebContents;
+        console.log("updating window");
+        console.log(windowWebContents);
+    }
+
+    updateLogs(){
+
+    }
+}
 
 let UDP = new UdpComms();
-
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-
-// UDP.window = mainWindow;s
-
-
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -52,81 +134,3 @@ app.on('activate', function () {
         mainWindow = appMainWindow.create();
     }
 });
-
-// Commuincation between main process (this one) and renderer (react)
-ipcMain.handle('send-udp-message', (event, arg) => {
-    console.log(arg)
-
-    let response = UDP.sendUDPMessage(arg, event);
-    
-    console.log(response);
-    return response;
-    
-    //event.reply('asynchronous-reply', 'success');
-});
-
-ipcMain.handle('change-udp-settings', (event, arg) => {
-    UDP.changeUDPListener(arg.listeningPort);
-    UDP.remoteIP = arg.remoteIP;
-    UDP.remotePort = arg.remotePort;
-    UDP.initializeUDPListener();
-
-    event.reply('asynchronous-reply', 'Changed UDP settings');
-});
-
-function CreateEmptyFile(){
-    writeFileSync(FullDebugPath, JSON.stringify(''));
-    console.log("Created Empty File");
-}
-
-ipcMain.handle('update-logs', (event, args) => {
-    readFile(FullDebugPath, (error, data) => {
-
-        if(error){
-            if(error.errno == -4058){
-                console.log("No file found Creating in directory: \n", FullDebugPath);
-                CreateEmptyFile();
-            }else{
-                console.log("An error has occoured while creating the debug file", error);
-                return;
-            }
-        }
-
-        console.log('Data Read successfully');
-
-        try{
-            data = JSON.parse(data);
-            if(args.sentMotorMessages.length > 0){
-                for(let i=0; i < args.sentMotorMessages.length; i++){
-                    data.sentMotorMessages.messages.push(args.sentMotorMessages[i]);
-                }
-            }
-            if(args.sentTestMessages.length > 0){
-                for(let i=0; i < args.sentTestMessages.length; i++){
-                    data.sentTestMessages.messages.push(args.sentTestMessages[i]);
-                }
-            }
-
-        }catch{
-            data = {sentMotorMessages: {messages: []}, sentTestMessages: {messages: []}};
-        }
-
-        writeFile(FullDebugPath, JSON.stringify(data), (err) => {
-            if(err){
-                console.log('An Error occoured', err);
-                return;
-            }
-            console.log('Data written successfully');
-        })
-    })
-    response = "Successful Read and Write";
-    return response;
-})
-
-ipcMain.handle('read-logs', (event, args) => {
-
-})
-
-ipcMain.handle('clear-logs', (event, args) => {
-
-})
