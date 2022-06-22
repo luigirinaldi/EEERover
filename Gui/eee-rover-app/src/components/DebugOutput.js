@@ -115,8 +115,9 @@ export class DebugOutput extends React.Component {
   handleIncomingMessage(event, arg){
     let incomingMsg = JSON.parse(arg);
     console.log(incomingMsg);
+    let time = (new Date(incomingMsg.time)).toLocaleTimeString('it-IT');
     this.setState({
-      responses: [ <ResponseElement time={incomingMsg.time} timeTaken={incomingMsg.timeTaken} msg={incomingMsg.data}/>, ...this.state.responses]
+      responses: [ <ResponseElement time={time} timeTaken={incomingMsg.timeTaken} msg={incomingMsg.message}/>, ...this.state.responses]
     })
   }
 

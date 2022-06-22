@@ -34,7 +34,7 @@ class UdpComms {
 
     constructor(){
         this.listeningPort = '52113';
-        this.remoteIP = '172.20.10.5';
+        this.remoteIP = '172.20.10.6';
         this.remotePort = '1883';
         
         // array to contain all messages sent in order to find if they got a response or not
@@ -114,6 +114,7 @@ class UdpComms {
 
     messageHandler(message, remote){
         let endTime = new Date();
+        let time = endTime; // time to be sent to renderer
         let elapsedTime = 0;
         console.log("Received message from " + remote.address + ':' + remote.port +' - ' + message);
 
@@ -121,17 +122,21 @@ class UdpComms {
         let incomingMessageType = incomingMessageContent[0];
                 
         if(Object.keys(codeToChannel).includes(incomingMessageType)) { // check if type is withing the accepted ones
+            incomingMessageType = codeToChannel[incomingMessageType];
             incomingMessageContent = incomingMessageContent.slice(1); //remove first character since it is the type
-            if(incomingMessageType === 'm' || incomingMessageType === 't'){ // message if either response to move or response to test
+            if(incomingMessageType === 'move' || incomingMessageType === 'test'){ // message if either response to move or response to test
                 // find message in sent message buffer 
                 // console.log(incomingMessageType);
-
+                
                 for(let i = 0; i < this.sentMessageBuffer.length; i++){ 
-                    if(incomingMessageContent == this.sentMessageBuffer[i].data && incomingMessageType == this.sentMessageBuffer[i].type){
-                        elapsedTime = endTime - new Date(this.sentMessageBuffer[i].time);
-                        // console.log(elapsedTime);
-                        this.sentMessageBuffer.splice(i, 1); // remove message from sent messages
-                        i = this.sentMessageBuffer.length + 1; // exit loop
+                    if(incomingMessageType == this.sentMessageBuffer[i].type){
+                        if(incomingMessageType == 'test' || incomingMessageContent == this.sentMessageBuffer[i].data){
+                            //test send body is empty so not expecting anything
+                            time = this.sentMessageBuffer[i].time;
+                            elapsedTime = endTime - new Date(this.sentMessageBuffer[i].time);
+                            this.sentMessageBuffer.splice(i, 1); // remove message from sent messages
+                            i = this.sentMessageBuffer.length + 1; // exit loop
+                        }
                     }
                 }
             }
@@ -144,6 +149,7 @@ class UdpComms {
             ip: remote.address,
             port: remote.port,
             timeTaken: elapsedTime, // non-zero only for test and motor messages
+            time: time
         }));        
     }
 
@@ -152,7 +158,7 @@ class UdpComms {
         //  type of message (motor/test), data and sent-time
         var JSONMessage = JSON.parse(message);
         let bufferMessage = Buffer.from(JSONMessage.data);
-        if(JSONMessage.type === "motor" || JSONMessage.type === "test"){
+        if(JSONMessage.type === "move" || JSONMessage.type === "test"){
             bufferMessage = Buffer.from((JSONMessage.type[0] + JSONMessage.data).toString()); // add prefix to message based on type, using first char of type (better way of doing this to be found)
         }
         console.log(bufferMessage.toString());
@@ -166,7 +172,7 @@ class UdpComms {
                 this.clientSock.close();
             }
         }
-        if(JSONMessage.type === "motor" || JSONMessage.type === "test"){
+        if(JSONMessage.type === "move" || JSONMessage.type === "test"){
             // append to buffer so time taken can be calculated later
             console.log("Pushing");
             this.sentMessageBuffer.push(JSONMessage);

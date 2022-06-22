@@ -41,8 +41,8 @@ class MotorControl extends React.Component {
     // movement code therefore prefixed by m
     let msg = code;
     let startDate = new Date();
-    console.log(JSON.stringify({type: "motor", data: msg, time: startDate}));
-    let arg = JSON.stringify({type: "motor", data: msg, time: startDate});
+    console.log(JSON.stringify({type: "move", data: msg, time: startDate}));
+    let arg = JSON.stringify({type: "move", data: msg, time: startDate});
     let udpStatus = await ipcRenderer.invoke('send-udp-message', arg);
     console.log(udpStatus);
   }
@@ -61,13 +61,6 @@ class MotorControl extends React.Component {
     } 
   }
 
-  addResponse(time, timeTaken, message){
-    // appending to response container
-    this.setState({ 
-      responseMessage: [ <ResponseElement time={time} timeTaken={timeTaken} msg={message}/>, ...this.state.responseMessage] 
-    })
-  }
-
   componentDidMount() {
 
     ipcRenderer.on('received-test-message', (event, arg) => {
@@ -81,41 +74,16 @@ class MotorControl extends React.Component {
       } else {
         this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);  
       }
-    });   
-
-    ipcRenderer.on('received-move-message', (event, arg) => {
-      // console.log(arg);
-      let stopDate = new Date();
-      let message = JSON.parse(arg);
-      console.log(this.sentMotorMessages.length);
-
-      console.log("Received move message from " + message.ip + ':' + message.port +' - ' + message.message);
-      
-      if(this.sentMotorMessages.length > 0){
-        let elapsedTime = ''; 
-
-        for(let i = 0; i < this.sentMotorMessages.length; i++){
-          if(this.sentMotorMessages[i].code === message.message){
-            elapsedTime = (stopDate - this.sentMotorMessages[i].startTime)/1000; //get time
-            this.sentMotorMessages.splice(i, 1); //remove element from array
-            i = this.sentMotorMessages.length; //terminate loop
-          } 
-        }
-      
-        this.addResponse(stopDate.toLocaleTimeString('it-IT'), elapsedTime, message.message);        
-      } else {
-        this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);  
-      }
-    });
+    }); 
 
     ipcRenderer.on('received-udp-message', (event, arg) => {
       // console.log(arg);
-      let stopDate = new Date();
+      // let stopDate = new Date();
       let message = JSON.parse(arg);
       console.log(message);
       console.log("Received message from " + message.ip + ':' + message.port +' - ' + message.message);
 
-      this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);
+      // this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);
     });
 
     // set the destination url here becasue context is not yet defined in constructor
