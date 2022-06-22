@@ -23,13 +23,13 @@ const readInterface = readline.createInterface({
 });
 
 const codeToChannel = {
-    't': 'received-test-message',
-    'm': 'received-move-message',
-    'e': 'received-error-message',
-    'd': 'received-data-message',
+    't': 'test',
+    'm': 'move',
+    'e': 'error',
+    'd': 'data',
 }
 
-const outoingMessageTimeout = 1000; // time out for messages sent that are waiting for response
+const outgoingMessageTimeout = 1000; // time out for messages sent that are waiting for response
 class UdpComms {
 
     constructor(){
@@ -45,8 +45,23 @@ class UdpComms {
         // interval that evey second checks if any outgoing messages have timed out
         // time out 
         this.intervalID = setInterval(() => {
+            let currTime = new Date();
+            for(let i = this.sentMessageBuffer - 1; i > this.sentMessageBuffer; i--){
+                let message = this.sentMessageBuffer[i];
+                if(currTime - message.time > outgoingMessageTimeout){
+                    // message has timed out
+                    appMainWindow.get().webContents.send('received-udp-message', JSON.stringify({
+                        type: message.type,
+                        message:message.data, 
+                        ip: null,
+                        port: null,
+                        timeTaken: null,
+                    })); 
 
-        }, 1000);
+                    this.sentMessageBuffer.splice(i, 1); // remove from array
+                }
+            }
+        }, outgoingMessageTimeout); 
 
         this.initializeUDPListener(); //intialize listener
     }
@@ -57,10 +72,10 @@ class UdpComms {
         //Create the Udp listener
         console.log('initializing udp listener ---------------------------|');
         this.clientSock = dgram.createSocket('udp4');
+        this.clientSock.bind(parseInt(this.listeningPort));
 
         //Handles any recieved messages from the ipcRender
         ipcMain.on('message', this.messageHandler);
-
         //Handle and print errors from the ipcRender
         ipcMain.on('error', err => {
             console.log("Node incurred an " + err);
@@ -98,10 +113,8 @@ class UdpComms {
         let incomingMessageContent = message.toString();
         let incomingMessageType = incomingMessageContent[0];
         
-        let channel  = 'received-udp-message'; // generic message for unkown incoming message types
         
         if(codeToChannel.keys().includes(incomingMessageType)) { // check if type is withing the accepted ones
-            channel = codeToChannel[incomingMessageType];
             incomingMessageContent = incomingMessageContent.slice(1); //remove first character since it is the type
             
             if(incomingMessageType === 'm' || incomingMessageType === 't'){ // message if either response to move or response to test
@@ -118,8 +131,9 @@ class UdpComms {
         } 
         
         // ARRIVING MESSAGES SHOULD BE SAVED TO THE DEBUG HERE
-        appMainWindow.get().webContents.send(channel.toString(), JSON.stringify({
-            message:incomingMessageContent, //remove first bit
+        appMainWindow.get().webContents.send('received-udp-message', JSON.stringify({
+            type: codeToChannel[incomingMessageType] !== undefined ? codeToChannel[incomingMessageType] : "unknown",
+            message: incomingMessageContent, //remove first bit
             ip: remote.address,
             port: remote.port,
             timeTaken: elapsedTime, // non-zero only for test and motor messages
@@ -151,7 +165,7 @@ class UdpComms {
         console.log('UDP message sent to ' + this.remoteIP +':'+ this.remotePort);
         });
 
-        return 'success'; //I cant seem to work out how to get this error checking working so rn it always returns success, not a massive issue but still would be nice
+        // return 'success'; //I cant seem to work out how to get this error checking working so rn it always returns success, not a massive issue but still would be nice
     }
 
     setWindow(windowWebContents){

@@ -1,6 +1,10 @@
 import React from "react";
 import styled from "styled-components";
 
+// to interact with main process
+const electron = window.require('electron');
+const { ipcRenderer } = electron;
+
 const ContainerDiv = styled.div`
   background-color: #26343f; 
   height: 100%;
@@ -93,24 +97,43 @@ export function ResponseElement(props) {
   );
 }
 
-export function DebugOutput(props) {
-    const { Title, IP, children } = props;
-    return(
-      <ContainerDiv>
-        <TitleContainerDiv>
-          <TitleSpan>
-            {Title} 
-          </TitleSpan>
-          <IpSpan>
-            IP: {IP}
-          </IpSpan>
-        </TitleContainerDiv>
-        <Separator />
-        <ContentDiv>
-          {children}
-        </ContentDiv>
-        <Separator />
-        <FooterContainer />
-      </ContainerDiv>
-  )
+export class DebugOutput extends React.Component {
+  constructor(props){
+    super(props);
+
+    this.state = {
+      responses: [],
+    }
+  }
+  componentDidMount() {
+    ipcRenderer.on('received-udp-message', (event, arg) => {
+      console.log(arg)
+    })  
+  }
+
+  componentWillUnmount(){
+    ipcRenderer.removeAllListeners();
+  }
+
+  render(){
+      const { Title, IP } = this.props;
+      return(
+        <ContainerDiv>
+          <TitleContainerDiv>
+            <TitleSpan>
+              {Title} 
+            </TitleSpan>
+            <IpSpan>
+              IP: {IP}
+            </IpSpan>
+          </TitleContainerDiv>
+          <Separator />
+          <ContentDiv>
+            {this.state.responses}
+          </ContentDiv>
+          <Separator />
+          <FooterContainer />
+        </ContainerDiv>
+    )
+  }
 }

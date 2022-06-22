@@ -101,7 +101,7 @@ void printWifiStatus()
   // print the SSID of the network you're attached to:
   // you're connected now, so print out the data
   Serial.print(F("You're connected to the network, IP = "));
-  Serial.println(WiFi.localIP());
+  Serial.println(static_cast<IPAddress>(WiFi.localIP()));
 
   Serial.print(F("SSID: "));
   Serial.print(WiFi.SSID());
