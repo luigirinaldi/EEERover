@@ -46,8 +46,10 @@ class MotorControl extends React.Component {
   async sendCode(code){
     // movement code therefore prefixed by m
     let msg = 'm' + code;
-    let udpStatus = await ipcRenderer.invoke('send-udp-message', msg);
     let startDate = new Date();
+    console.log(JSON.stringify({type: "motor", data: msg, time: startDate}));
+    let arg = JSON.stringify({type: "motor", data: msg, time: startDate});
+    let udpStatus = await ipcRenderer.invoke('send-udp-message', arg);
     
     if(udpStatus === 'fail'){
       console.log('Failed sending code: ' + msg);
@@ -60,9 +62,9 @@ class MotorControl extends React.Component {
 
   testConnection(){    
     let msg = 't'; //test connection message
-
-    let udpStatus = ipcRenderer.invoke('send-udp-message',msg);
     let startDate = new Date();
+    let udpStatus = ipcRenderer.invoke('send-udp-message', JSON.stringify({type: "test", data: msg, time: startDate}));
+    
     console.log(udpStatus);
     if(udpStatus === 'fail'){
       console.log('Failed connection test');

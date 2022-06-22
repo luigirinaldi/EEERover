@@ -12,7 +12,15 @@ let mainWindow = null;
 
 // Module to control application life.
 const app = electron.app;
+
+const readline = require('readline');
+const fs = require('fs');
 console.log(app.getPath('userData'));
+
+const readInterface = readline.createInterface({
+    input: fs.createReadStream(app.getPath('userData') + '/DebugLogs.txt'),
+    console: true
+});
 
 const codeToChannel = {
     't': 'received-test-message',
@@ -48,6 +56,7 @@ class UdpComms {
         })
 
         ipcMain.handle('send-udp-message', (event, arg) => {
+            fs.appendFile(app.getPath('userData') + '/DebugLogs.txt', arg + '\n', 'utf-8', ()=>{});
             return this.sendUDPMessage(arg);
         });
 
@@ -56,11 +65,13 @@ class UdpComms {
             this.remotePort = arg.remotePort;
         });
         
-        ipcMain.handle('read-logs', (event, args) => {
-        
+        ipcMain.handle('read-logs', (event, arg) => {
+            readInterface.on('line', function(line) {
+                console.log(JSON.parse(line).motorMessage);
+            });            
         })
         
-        ipcMain.handle('clear-logs', (event, args) => {
+        ipcMain.handle('clear-logs', (event, arg) => {
         
         })
 
@@ -80,6 +91,9 @@ class UdpComms {
     }
 
     sendUDPMessage(message){
+        message = JSON.parse(message);
+        message = message.data;
+
         let bufferMessage = Buffer.from(message);
         this.clientSock.send(bufferMessage, this.remotePort, this.remoteIP, (err, bytes) => {
         if(err !== null){
