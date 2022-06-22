@@ -27,14 +27,26 @@ const codeToChannel = {
     'm': 'received-move-message',
     'e': 'received-error-message',
     'd': 'received-data-message',
-  }
-  
+}
+
+const outoingMessageTimeout = 1000; // time out for messages sent that are waiting for response
 class UdpComms {
 
     constructor(){
         this.listeningPort = '52113';
         this.remoteIP = '172.20.10.5';
         this.remotePort = '1883';
+        
+        // array to contain all messages sent in order to find if they got a response or not
+        // move messages will receive back the same message sent if successfull, test messages will receive a t
+        // all other messages are not the result of a "request" from this app
+        this.sentMessageBuffer = []; 
+
+        // interval that evey second checks if any outgoing messages have timed out
+        // time out 
+        this.intervalID = setInterval(() => {
+
+        }, 1000);
 
         this.initializeUDPListener(); //intialize listener
     }
@@ -78,26 +90,51 @@ class UdpComms {
     }
 
     messageHandler(message, remote){
+        let endTime = new Date();
+        let elapsedTime = 0;
         console.log("Received message from " + remote.address + ':' + remote.port +' - ' + message);
 
-        let channel  = codeToChannel[message.toString()[0]];
-        if(!channel) channel = 'received-udp-message';
-
+        let incomingMessageContent = message.toString();
+        let incomingMessageType = incomingMessageContent[0];
+        
+        let channel  = 'received-udp-message'; // generic message for unkown incoming message types
+        
+        if(codeToChannel.keys().includes(incomingMessageType)) { // check if type is withing the accepted ones
+            channel = codeToChannel[incomingMessageType];
+            incomingMessageContent = incomingMessageContent.slice(1); //remove first character since it is the type
+            
+            if(incomingMessageType === 'm' || incomingMessageType === 't'){ // message if either response to move or response to test
+                // find message in sent message buffer 
+                let type = incomingMessageType === 'm' ? 'motor' : 'test'; // bad code
+                for(let i = 0; i < this.sentMessageBuffer.length; i++){ 
+                    if(type === this.sentMessageBuffer[i].type && incomingMessageContent === this.sentMessageBuffer[i].data){
+                        elapsedTime = endTime - this.sentMessageBuffer[i].time;
+                        this.sentMessageBuffer.splice(i, 1); // remove message from sent messages
+                        i = this.sentMessageBuffer.length + 1; // exit loop
+                    }
+                }
+            }
+        } 
+        
+        // ARRIVING MESSAGES SHOULD BE SAVED TO THE DEBUG HERE
         appMainWindow.get().webContents.send(channel.toString(), JSON.stringify({
-        message:message.toString().slice(1), //remove first bit
-        ip: remote.address,
-        port: remote.port
-        }));
+            message:incomingMessageContent, //remove first bit
+            ip: remote.address,
+            port: remote.port,
+            timeTaken: elapsedTime, // non-zero only for test and motor messages
+        }));        
     }
 
     sendUDPMessage(message){
+        // message object contains:
+        //  type of message (motor/test), data and sent-time
         message = JSON.parse(message);
-        message = message.data;
-
-        let bufferMessage = Buffer.from(message);
+        let bufferMessage = Buffer.from(message.data);
+        if(message.type === "motor" || message.type === "test"){
+            bufferMessage = Buffer.from(message.type[0] + message.data); // add prefix to message based on type, using first char of type (better way of doing this to be found)
+        }
         this.clientSock.send(bufferMessage, this.remotePort, this.remoteIP, (err, bytes) => {
         if(err !== null){
-
             if(err.message.includes('getaddrinfo')){
                 console.log('Incorrect Adress Format')
 
@@ -105,6 +142,10 @@ class UdpComms {
                 console.log('error:' + err);
                 this.clientSock.close();
             }
+        }
+        if(message.type === "motor" || message.type === "test"){
+            // append to buffer so time taken can be calculated later
+            this.sentMessageBuffer.push(message);
         }
         console.log('UDP message sent to ' + this.remoteIP +':'+ this.remotePort);
         });
