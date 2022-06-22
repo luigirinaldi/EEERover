@@ -61,6 +61,7 @@ class UdpComms {
         });
 
         ipcMain.on('change-udp-settings', (event, arg) => {
+            fs.appendFile(app.getPath('userData') + '/DebugLogs.txt', arg + '\n', 'utf-8', ()=>{});
             this.remoteIP = arg.remoteIP;
             this.remotePort = arg.remotePort;
         });
