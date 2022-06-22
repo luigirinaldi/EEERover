@@ -42,6 +42,7 @@ class UdpComms {
         // all other messages are not the result of a "request" from this app
         this.sentMessageBuffer = []; 
 
+        this.messageHandler = this.messageHandler.bind(this);
         // interval that evey second checks if any outgoing messages have timed out
         // time out 
         this.intervalID = setInterval(() => {
@@ -72,10 +73,16 @@ class UdpComms {
         //Create the Udp listener
         console.log('initializing udp listener ---------------------------|');
         this.clientSock = dgram.createSocket('udp4');
-        this.clientSock.bind(parseInt(this.listeningPort));
 
         //Handles any recieved messages from the ipcRender
-        ipcMain.on('message', this.messageHandler);
+        this.clientSock.on('message', this.messageHandler);
+
+        this.clientSock.on('listening', () => {
+            console.log("test");
+        })
+  
+        this.clientSock.bind(parseInt(this.listeningPort));
+
         //Handle and print errors from the ipcRender
         ipcMain.on('error', err => {
             console.log("Node incurred an " + err);
@@ -112,17 +119,17 @@ class UdpComms {
 
         let incomingMessageContent = message.toString();
         let incomingMessageType = incomingMessageContent[0];
-        
-        
-        if(codeToChannel.keys().includes(incomingMessageType)) { // check if type is withing the accepted ones
+                
+        if(Object.keys(codeToChannel).includes(incomingMessageType)) { // check if type is withing the accepted ones
             incomingMessageContent = incomingMessageContent.slice(1); //remove first character since it is the type
-            
             if(incomingMessageType === 'm' || incomingMessageType === 't'){ // message if either response to move or response to test
                 // find message in sent message buffer 
-                let type = incomingMessageType === 'm' ? 'motor' : 'test'; // bad code
+                // console.log(incomingMessageType);
+
                 for(let i = 0; i < this.sentMessageBuffer.length; i++){ 
-                    if(type === this.sentMessageBuffer[i].type && incomingMessageContent === this.sentMessageBuffer[i].data){
-                        elapsedTime = endTime - this.sentMessageBuffer[i].time;
+                    if(incomingMessageContent == this.sentMessageBuffer[i].data && incomingMessageType == this.sentMessageBuffer[i].type){
+                        elapsedTime = endTime - new Date(this.sentMessageBuffer[i].time);
+                        // console.log(elapsedTime);
                         this.sentMessageBuffer.splice(i, 1); // remove message from sent messages
                         i = this.sentMessageBuffer.length + 1; // exit loop
                     }
@@ -143,11 +150,12 @@ class UdpComms {
     sendUDPMessage(message){
         // message object contains:
         //  type of message (motor/test), data and sent-time
-        message = JSON.parse(message);
-        let bufferMessage = Buffer.from(message.data);
-        if(message.type === "motor" || message.type === "test"){
-            bufferMessage = Buffer.from(message.type[0] + message.data); // add prefix to message based on type, using first char of type (better way of doing this to be found)
+        var JSONMessage = JSON.parse(message);
+        let bufferMessage = Buffer.from(JSONMessage.data);
+        if(JSONMessage.type === "motor" || JSONMessage.type === "test"){
+            bufferMessage = Buffer.from((JSONMessage.type[0] + JSONMessage.data).toString()); // add prefix to message based on type, using first char of type (better way of doing this to be found)
         }
+        console.log(bufferMessage.toString());
         this.clientSock.send(bufferMessage, this.remotePort, this.remoteIP, (err, bytes) => {
         if(err !== null){
             if(err.message.includes('getaddrinfo')){
@@ -158,14 +166,16 @@ class UdpComms {
                 this.clientSock.close();
             }
         }
-        if(message.type === "motor" || message.type === "test"){
+        if(JSONMessage.type === "motor" || JSONMessage.type === "test"){
             // append to buffer so time taken can be calculated later
-            this.sentMessageBuffer.push(message);
+            console.log("Pushing");
+            this.sentMessageBuffer.push(JSONMessage);
+            // console.log(this.sentMessageBuffer);
         }
         console.log('UDP message sent to ' + this.remoteIP +':'+ this.remotePort);
         });
 
-        // return 'success'; //I cant seem to work out how to get this error checking working so rn it always returns success, not a massive issue but still would be nice
+        return 'success'; //I cant seem to work out how to get this error checking working so rn it always returns success, not a massive issue but still would be nice
     }
 
     setWindow(windowWebContents){

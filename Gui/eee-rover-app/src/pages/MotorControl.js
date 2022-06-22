@@ -14,12 +14,6 @@ class MotorControl extends React.Component {
   //to time how long each udp requests takes:
     // the code sent is saved with the start time of the request 
     // upon receiving udp packet code is compared and time taken is found
-
-    sentMotorMessages = []; //array of codes and start times of outgoing motor messages
-    recievedMotorMessages = []; //recieved motor data with recieved times
-    sentTestMessages = []; //array of test messages and there start times
-    recievedTestMessages = []; //contains the response from a test message and the time it took and recieved
-    settingMessages = []; //array of changed setting instances and there times
     
     constructor(props){
     super(props)
@@ -45,23 +39,16 @@ class MotorControl extends React.Component {
 
   async sendCode(code){
     // movement code therefore prefixed by m
-    let msg = 'm' + code;
+    let msg = code;
     let startDate = new Date();
     console.log(JSON.stringify({type: "motor", data: msg, time: startDate}));
     let arg = JSON.stringify({type: "motor", data: msg, time: startDate});
     let udpStatus = await ipcRenderer.invoke('send-udp-message', arg);
-    
-    if(udpStatus === 'fail'){
-      console.log('Failed sending code: ' + msg);
-    } else if (udpStatus === 'success'){
-      console.log(this.sentMotorMessages);
-      (this.sentMotorMessages).push({"code" : code, "startTime": startDate});
-      console.log(this.sentMotorMessages);
-    }    
+    console.log(udpStatus);
   }
 
   testConnection(){    
-    let msg = 't'; //test connection message
+    let msg = '';
     let startDate = new Date();
     let udpStatus = ipcRenderer.invoke('send-udp-message', JSON.stringify({type: "test", data: msg, time: startDate}));
     

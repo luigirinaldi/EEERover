@@ -104,11 +104,20 @@ export class DebugOutput extends React.Component {
     this.state = {
       responses: [],
     }
+
+    this.handleIncomingMessage = this.handleIncomingMessage.bind(this);
   }
+
   componentDidMount() {
-    ipcRenderer.on('received-udp-message', (event, arg) => {
-      console.log(arg)
-    })  
+    ipcRenderer.on('received-udp-message', this.handleIncomingMessage)
+  }
+
+  handleIncomingMessage(event, arg){
+    let incomingMsg = JSON.parse(arg);
+    console.log(incomingMsg);
+    this.setState({
+      responses: [ <ResponseElement time={incomingMsg.time} timeTaken={incomingMsg.timeTaken} msg={incomingMsg.data}/>, ...this.state.responses]
+    })
   }
 
   componentWillUnmount(){
