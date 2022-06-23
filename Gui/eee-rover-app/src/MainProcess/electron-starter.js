@@ -146,9 +146,8 @@ class UdpComms {
             }
         } 
         
-
         let FinalMessage = JSON.stringify({
-            type: codeToChannel[incomingMessageType] !== undefined ? codeToChannel[incomingMessageType] : "unknown",
+            type: incomingMessageType,
             transmission: "receiving",
             message: incomingMessageContent, //remove first bit
             ip: remote.address,

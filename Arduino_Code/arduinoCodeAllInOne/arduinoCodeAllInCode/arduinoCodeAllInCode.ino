@@ -13,8 +13,6 @@
 #define USE_WIFI101           true
 #include <WiFiWebServer.h>
 #include <WiFiUDP.h>
-#include <Adafruit_LIS2MDL.h>
-#include <Adafruit_Sensor.h>
 #include <Wire.h>
 
 #define DEBUG_WIFI_WEBSERVER_PORT   Serial
@@ -34,23 +32,18 @@ char SendDetail2[] = "J000A000000000B";
 IPAddress pcIP; //global ip address op pc needed to send responses back without message
 WiFiUDP Udp;
 
-char ssid[] = "EEERover";        // your network SSID (name)
-char pass[] = "exhibition";
+char ssid[] = "iPhone di Luigi";        // your network SSID (name)
+char pass[] = "passwordThatsVeryStrong";
 const int groupNumber = 15;
 const int i2c_slave_motor = 4;
 
 // interrupt pins for measuring frequencies:
-const byte infraredPin = A0;
-const byte acousticPin = A1;
-const byte radioSignalPin = A2;
-const byte radioCarrierPin = A3;
+const int infraredPin = 2;
+const int acousticPin = 3;
+const int radioSignalPin = 8;
+const int radioCarrierPin = 6;
 
 // globals for sensor measurement
-/* Assign a unique ID to this sensor at the same time */
-Adafruit_LIS2MDL lis2mdl = Adafruit_LIS2MDL(12345);
-
-
-
 const int samplingPeriod = 200; //measure the frequency every second
 unsigned long prevTime = 0; //measure elapsed time, should last up to 72 hours
 
@@ -66,7 +59,7 @@ volatile int radioCarrierCounter = 0;
 bool countCarrier = false;
 
 double radioSignalFreq = 0;
-double radioCarrierFreq = 0;
+double radioCarrieFreq = 0;
 
 // Interrupt Service Routines
 void infraredISR(){
@@ -93,11 +86,13 @@ void radioCarrierISR(){
 }
 
 void attachISRs(){
+
   attachInterrupt(digitalPinToInterrupt(infraredPin), infraredISR, RISING);
   attachInterrupt(digitalPinToInterrupt(acousticPin), acousticISR, RISING);
   attachInterrupt(digitalPinToInterrupt(radioSignalPin), radioSignalISR, RISING);
   attachInterrupt(digitalPinToInterrupt(radioSignalPin), radioSignalISR, FALLING); // to detect falling edge and stop measuring the carrier frequency
   attachInterrupt(digitalPinToInterrupt(radioCarrierPin), radioCarrierISR, RISING);
+
 }
 
 
@@ -119,30 +114,14 @@ void printWifiStatus()
 }
 
 void sendUDPData(){
-  // Global magnet event struct/object?
-  sensors_event_t magnetEvent;
-  lis2mdl.getEvent(&magnetEvent);
-  // Serial.print("X: ");
-  // Serial.print(magnetEvent.magnetic.x);
-  // Serial.print("  ");
-  // Serial.print("Y: ");
-  // Serial.print(magnetEvent.magnetic.y);
-  // Serial.print("  ");
-  // Serial.print("Z: ");
-  // Serial.print(magnetEvent.magnetic.z);
-  // Serial.print("  ");
-  // Serial.println("uT");
-
-  char Databuff[32];
-  int radioCarrierTrunc = radioCarrierFreq / 1000; //integer division by a 1000 to keep only thousands' digits
-  int acousticTrunc = acousticFreq / 1000; // same as radio carrier
-  sprintf(Databuff, "dR%+0.3d|%+0.2dI%+0.3dA%+0.2dM%+.5d|%+.5d|%+.5d|", int(radioSignalFreq), radioCarrierTrunc, int(infraredFreq), acousticTrunc, int(magnetEvent.magnetic.x),  int(magnetEvent.magnetic.y),  int(magnetEvent.magnetic.z));
-  // sprintf(IRbuff, "%5.2f", infraredFreq);
+  char IRbuff[20];
+  sprintf(IRbuff, "%5.2f", infraredFreq);
   Serial.print("pc IP:");
   Serial.println(static_cast<IPAddress>(pcIP));
-  Serial.println(Databuff);
   Udp.beginPacket(pcIP, upperPort);
-  Udp.write(Databuff);
+  Udp.write('d');
+  Udp.write("IR ");
+  Udp.write(IRbuff);  
   Udp.endPacket();
 }
 
@@ -254,17 +233,6 @@ void setup()
   //Remove this for faster startup when the USB host isn't attached
   while (!Serial && millis() < 10000);  
 
-  /* Initialise the sensor */
-  if (!lis2mdl.begin()) {  // I2C mode
-  //if (! lis2mdl.begin_SPI(LIS2MDL_CS)) {  // hardware SPI mode
-  //if (! lis2mdl.begin_SPI(LIS2MDL_CS, LIS2MDL_CLK, LIS2MDL_MISO, LIS2MDL_MOSI)) { // soft SPI
-    /* There was a problem detecting the LIS2MDL ... check your connections */
-    Serial.println("Ooops, no LIS2MDL detected ... Check your wiring!");
-    while (1) delay(10);
-  }
-  Serial.println("Magnet sensor detected!");
-  lis2mdl.printSensorDetails();
-
   Serial.println(F("\nStarting Web Server"));
   
 
@@ -329,7 +297,7 @@ void loop()
 
     radioSignalFreq = (double(radioSignalCounter)/samplingPeriod)* 1000;
     radioSignalCounter = 0;
-    radioCarrierFreq = (double(radioCarrierCounter)/samplingPeriod)* 1000;
+    radioCarrieFreq = (double(radioCarrierCounter)/samplingPeriod)* 1000;
     radioCarrierCounter = 0;
 
     // Serial.print("Acoustic freq: ");
@@ -341,21 +309,14 @@ void loop()
     // Serial.print("Hz ");
 
     // Serial.print("Radio Carrier freq: ");
-    // Serial.print(radioCarrierFreq);
+    // Serial.print(radioCarrieFreq);
     // Serial.print("Hz ");  
 
     // Serial.print("infrared freq: ");
     // Serial.print(infraredFreq);
     // Serial.println("Hz");
 
-    sendUDPData();
-  }
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(50);
-    Serial.print('.');
-    WiFi.begin(ssid, pass);
+    // sendUDPData();
   }
 
 }
