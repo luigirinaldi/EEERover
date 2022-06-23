@@ -181,7 +181,6 @@ class UdpComms {
         }
         if(JSONMessage.type === "move" || JSONMessage.type === "test"){
             // append to buffer so time taken can be calculated later
-            console.log("Pushing");
             this.sentMessageBuffer.push(JSONMessage);
             // console.log(this.sentMessageBuffer);
         }

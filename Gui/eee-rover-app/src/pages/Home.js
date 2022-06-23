@@ -1,6 +1,6 @@
 import React from 'react';
 import PageContainer from './PageContainer';
-
+import { MyChart } from '../components/Graph'
 const HTTPButton = () => {
   async function HttpRequest(){
     fetch('http://172.20.10.7/move?dir=1&sped=23', {
@@ -29,6 +29,7 @@ const HTTPButton = () => {
 const Home = () => {
   return (
     <PageContainer>
+      <MyChart/>
       <div>
         <h1>Home Page</h1>
         <HTTPButton />
