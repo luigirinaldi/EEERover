@@ -41,8 +41,8 @@ class MotorControl extends React.Component {
     // movement code therefore prefixed by m
     let msg = code;
     let startDate = new Date();
-    console.log(JSON.stringify({type: "move", data: msg, time: startDate}));
-    let arg = JSON.stringify({type: "move", data: msg, time: startDate});
+    console.log(JSON.stringify({type: "move", transmission: "sending", data: msg, time: startDate}));
+    let arg = JSON.stringify({type: "move", transmission: "sending", data: msg, time: startDate});
     let udpStatus = await ipcRenderer.invoke('send-udp-message', arg);
     console.log(udpStatus);
   }
@@ -50,7 +50,7 @@ class MotorControl extends React.Component {
   testConnection(){    
     let msg = '';
     let startDate = new Date();
-    let udpStatus = ipcRenderer.invoke('send-udp-message', JSON.stringify({type: "test", data: msg, time: startDate}));
+    let udpStatus = ipcRenderer.invoke('send-udp-message', JSON.stringify({type: "test", transmission: "sending", data: msg, time: startDate}));
     
     console.log(udpStatus);
     if(udpStatus === 'fail'){

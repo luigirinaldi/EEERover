@@ -106,10 +106,15 @@ export class DebugOutput extends React.Component {
     }
 
     this.handleIncomingMessage = this.handleIncomingMessage.bind(this);
+
   }
 
   componentDidMount() {
-    ipcRenderer.on('received-udp-message', this.handleIncomingMessage)
+    ipcRenderer.on('received-udp-message', this.handleIncomingMessage);
+
+    ipcRenderer.on('console-data',this.handleIncomingMessage)
+
+    ipcRenderer.send('read-logs', '');
   }
 
   handleIncomingMessage(event, arg){
