@@ -101,6 +101,10 @@ export class DebugOutput extends React.Component {
   constructor(props){
     super(props);
 
+    // array that contains types of messages to be accepted:
+    // move, data, test and error
+    this.allowedTypes = this.props.types;
+
     this.state = {
       responses: [],
     }
@@ -115,10 +119,12 @@ export class DebugOutput extends React.Component {
   handleIncomingMessage(event, arg){
     let incomingMsg = JSON.parse(arg);
     console.log(incomingMsg);
-    let time = (new Date(incomingMsg.time)).toLocaleTimeString('it-IT');
-    this.setState({
-      responses: [ <ResponseElement time={time} timeTaken={incomingMsg.timeTaken} msg={incomingMsg.message}/>, ...this.state.responses]
-    })
+    if(this.allowedTypes.includes(incomingMsg.type)){
+      let time = (new Date(incomingMsg.time)).toLocaleTimeString('it-IT');
+      this.setState({
+        responses: [ <ResponseElement time={time} timeTaken={incomingMsg.timeTaken} msg={incomingMsg.message}/>, ...this.state.responses]
+      })
+    }
   }
 
   componentWillUnmount(){

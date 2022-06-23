@@ -62,30 +62,6 @@ class MotorControl extends React.Component {
   }
 
   componentDidMount() {
-
-    ipcRenderer.on('received-test-message', (event, arg) => {
-      let stopDate = new Date();
-      let message = JSON.parse(arg);
-
-      // console.log("Received test message from " + message.ip + ':' + message.port +' - ' + message.message);
-      if(this.sentTestMessages.length > 0){
-        let elapsedTime = (stopDate - this.sentTestMessages.shift())/1000; //get first value and remove it
-        this.addResponse(stopDate.toLocaleTimeString('it-IT'), elapsedTime, message.message);        
-      } else {
-        this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);  
-      }
-    }); 
-
-    ipcRenderer.on('received-udp-message', (event, arg) => {
-      // console.log(arg);
-      // let stopDate = new Date();
-      let message = JSON.parse(arg);
-      console.log(message);
-      console.log("Received message from " + message.ip + ':' + message.port +' - ' + message.message);
-
-      // this.addResponse(stopDate.toLocaleTimeString('it-IT'), '', message.message);
-    });
-
     // set the destination url here becasue context is not yet defined in constructor
     this.destinationURL = "http://" + this.context.roverIP + "/";
 
@@ -136,9 +112,7 @@ class MotorControl extends React.Component {
         </div>
         {/* TODO, add clear output button */}
         <div className='row2'> 
-          <DebugOutput Title="Arduino Responses" IP={roverIP}>
-            {this.state.responseMessage}
-          </DebugOutput>
+          <DebugOutput Title="Arduino Responses" IP={roverIP} types={['move','test','error']}/>
         </div>
       </div>
     </PageContainer>     

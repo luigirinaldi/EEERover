@@ -144,7 +144,7 @@ class UdpComms {
         
         // ARRIVING MESSAGES SHOULD BE SAVED TO THE DEBUG HERE
         appMainWindow.get().webContents.send('received-udp-message', JSON.stringify({
-            type: codeToChannel[incomingMessageType] !== undefined ? codeToChannel[incomingMessageType] : "unknown",
+            type: incomingMessageType,
             message: incomingMessageContent, //remove first bit
             ip: remote.address,
             port: remote.port,
