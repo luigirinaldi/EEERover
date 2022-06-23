@@ -116,14 +116,16 @@ export class DebugOutput extends React.Component {
   componentDidMount() {
     ipcRenderer.on('received-udp-message', this.handleIncomingMessage);
 
-    ipcRenderer.on('console-data',this.handleIncomingMessage)
+    // ipcRenderer.on('console-data', this.handleIncomingMessage)
 
-    ipcRenderer.send('read-logs', '');
+    // ipcRenderer.send('read-logs', '');
   }
 
-  handleIncomingMessage(event, arg){
-    let incomingMsg = JSON.parse(arg);
-    console.log(incomingMsg);
+  handleIncomingMessage(event, args){
+    let incomingMsg = JSON.parse(args);
+    console.log("Incoming msg:" + incomingMsg);
+    console.log("args" + args);
+    console.log("type:" + incomingMsg.type)
     if(this.allowedTypes.includes(incomingMsg.type)){
       let time = (new Date(incomingMsg.time)).toLocaleTimeString('it-IT');
       this.setState({

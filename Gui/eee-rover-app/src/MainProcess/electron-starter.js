@@ -99,13 +99,17 @@ class UdpComms {
         
         ipcMain.on('read-logs', (event, arg) => {
             console.log("reading lines");
-            const readInterface = readline.createInterface({
+            let readInterface = readline.createInterface({
                 input: fs.createReadStream(app.getPath('userData') + '/DebugLogs.txt'),
                 console: true
             }); 
             readInterface.on('line', function(line) {
-                if (JSON.parse(line).transmission == 'received'){
-                    appMainWindow.get().webContents.send('console-data', JSON.stringify(line));     
+                if (JSON.parse(line).transmission === 'received'){
+                    // console.log("Sending console data");
+                    // console.log(line);
+                    appMainWindow.get().webContents.send('console-data', line);  
+                    // console.log(appMainWindow.get());
+                    // event.sender.send('console-data', line);        
                 }
             });         
         })
@@ -148,7 +152,7 @@ class UdpComms {
         
         let FinalMessage = JSON.stringify({
             type: incomingMessageType,
-            transmission: "receiving",
+            transmission: "received",
             message: incomingMessageContent, //remove first bit
             ip: remote.address,
             port: remote.port,
@@ -156,7 +160,7 @@ class UdpComms {
             time: time
         });   
         // ARRIVING MESSAGES SHOULD BE SAVED TO THE DEBUG HERE
-        fs.appendFile(app.getPath('userData') + '/DebugLogs.txt', FinalMessage)
+        fs.appendFile(app.getPath('userData') + '/DebugLogs.txt', FinalMessage + '\n', () => {}); // bad code
         appMainWindow.get().webContents.send('received-udp-message', FinalMessage);     
     }
 
@@ -226,3 +230,4 @@ app.on('activate', function () {
         mainWindow = appMainWindow.create();
     }
 });
+
