@@ -1,6 +1,5 @@
 import React from "react";
-import { Chart } from 'react-charts';
-
+import { AxisOptions, Chart } from 'react-charts';
 
 
     let Series = [
@@ -14,31 +13,33 @@ import { Chart } from 'react-charts';
         // ...
       ]
     },
-    {
-      label: 'React Query',
-      data: [
-        {
-          date: new Date(),
-          stars: 10234230,
-        }
-        // ...
-      ]
-    }
   ]
 
 export function MyChart() {
 
-    const data = [
+    let data = [
         {
           label: 'React Charts',
           data: [
             {
-              date: new Date(),
+              date: new Date().getMonth(),
               stars: 23467238,
+            },
+            {
+                date: new Date().getMonth() + 1,
+                stars: 2555555,
+            },
+            {
+                date: new Date().getMonth() + 2,
+                stars: 2555204,
+            },
+            {
+                date: new Date().getMonth() + 3,
+                stars: 2512534,
             },
           ],
         },
-      ]
+    ]
 
     const primaryAxis = React.useMemo(
         () => ({
@@ -49,6 +50,7 @@ export function MyChart() {
         () => [
         {
             getValue: datum => datum.stars,
+            elementType: 'line',
         },
         ],
     )
