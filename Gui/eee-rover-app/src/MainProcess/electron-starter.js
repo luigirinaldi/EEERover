@@ -15,12 +15,9 @@ const app = electron.app;
 
 const readline = require('readline');
 const fs = require('fs');
+const { ipcRenderer } = require('electron');
 console.log(app.getPath('userData'));
 
-const readInterface = readline.createInterface({
-    input: fs.createReadStream(app.getPath('userData') + '/DebugLogs.txt'),
-    console: true
-});
 
 const codeToChannel = {
     't': 'test',
@@ -100,10 +97,17 @@ class UdpComms {
             this.remotePort = arg.remotePort;
         });
         
-        ipcMain.handle('read-logs', (event, arg) => {
+        ipcMain.on('read-logs', (event, arg) => {
+            console.log("reading lines");
+            const readInterface = readline.createInterface({
+                input: fs.createReadStream(app.getPath('userData') + '/DebugLogs.txt'),
+                console: true
+            }); 
             readInterface.on('line', function(line) {
-                console.log(JSON.parse(line).motorMessage);
-            });            
+                if (JSON.parse(line).transmission == 'received'){
+                    appMainWindow.get().webContents.send('console-data', JSON.stringify(line));     
+                }
+            });         
         })
         
         ipcMain.handle('clear-logs', (event, arg) => {
@@ -142,15 +146,18 @@ class UdpComms {
             }
         } 
         
-        // ARRIVING MESSAGES SHOULD BE SAVED TO THE DEBUG HERE
-        appMainWindow.get().webContents.send('received-udp-message', JSON.stringify({
+        let FinalMessage = JSON.stringify({
             type: incomingMessageType,
+            transmission: "receiving",
             message: incomingMessageContent, //remove first bit
             ip: remote.address,
             port: remote.port,
             timeTaken: elapsedTime, // non-zero only for test and motor messages
             time: time
-        }));        
+        });   
+        // ARRIVING MESSAGES SHOULD BE SAVED TO THE DEBUG HERE
+        fs.appendFile(app.getPath('userData') + '/DebugLogs.txt', FinalMessage)
+        appMainWindow.get().webContents.send('received-udp-message', FinalMessage);     
     }
 
     sendUDPMessage(message){
