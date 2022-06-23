@@ -34,8 +34,8 @@ char SendDetail2[] = "J000A000000000B";
 IPAddress pcIP; //global ip address op pc needed to send responses back without message
 WiFiUDP Udp;
 
-char ssid[] = "EEERover";        // your network SSID (name)
-char pass[] = "exhibition";
+char ssid[] = "iPhone di Luigi";        // your network SSID (name)
+char pass[] = "passwordThatsVeryStrong";
 const int groupNumber = 15;
 const int i2c_slave_motor = 4;
 
