@@ -34,8 +34,8 @@ char SendDetail2[] = "J000A000000000B";
 IPAddress pcIP; //global ip address op pc needed to send responses back without message
 WiFiUDP Udp;
 
-char ssid[] = "iPhone di Luigi";        // your network SSID (name)
-char pass[] = "passwordThatsVeryStrong";
+char ssid[] = "EEERover";        // your network SSID (name)
+char pass[] = "exhibition";
 const int groupNumber = 15;
 const int i2c_slave_motor = 4;
 
@@ -349,6 +349,13 @@ void loop()
     // Serial.println("Hz");
 
     sendUDPData();
+  }
+
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(50);
+    Serial.print('.');
+    WiFi.begin(ssid, pass);
   }
 
 }
