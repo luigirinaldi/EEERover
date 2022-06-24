@@ -23,10 +23,10 @@ const keyToDirection = {
   'f': 'slow',
 }
 
-const MIN_DIFFERENCE = 0.05;
+const MIN_DIFFERENCE = 0.03;
 const ZERO_BOUNDARY = 0.08;
 const MIN_SPED = 0;
-const MAX_SPED = 255;
+const MAX_SPED = 200;
 
 export class DiscreteControl extends React.Component {
   constructor(props){

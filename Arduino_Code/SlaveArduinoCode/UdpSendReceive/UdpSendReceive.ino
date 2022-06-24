@@ -34,8 +34,8 @@ char SendDetail2[] = "J000A000000000B";
 IPAddress pcIP; //global ip address op pc needed to send responses back without message
 WiFiUDP Udp;
 
-char ssid[] = "iPhone di Luigi";        // your network SSID (name)
-char pass[] = "passwordThatsVeryStrong";
+char ssid[] = "EEERover";        // your network SSID (name)
+char pass[] = "exhibition";
 const int groupNumber = 15;
 const int i2c_slave_motor = 4;
 
@@ -51,7 +51,7 @@ Adafruit_LIS2MDL lis2mdl = Adafruit_LIS2MDL(12345);
 
 
 
-const int samplingPeriod = 200; //measure the frequency every second
+const int samplingPeriod = 500; //measure the frequency every second
 unsigned long prevTime = 0; //measure elapsed time, should last up to 72 hours
 
 volatile int infraredCounter = 0;
@@ -228,8 +228,9 @@ void udpHandleMessage(int packetSize){
         pcIP = Udp.remoteIP();
         Serial.print("Ip from remote: ");
         Serial.println(static_cast<IPAddress>(pcIP));
-        // sprintf(IPbuff, "", pcIP , );
-        // Serial.println(IPbuff);
+
+        // int newSamplingPeriod = 
+
         Udp.beginPacket(pcIP, upperPort);
         Udp.write("tSuccessful connection to JABA Rover from:");  
         // Udp.write(IPbuff);

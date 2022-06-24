@@ -97,26 +97,26 @@ class UdpComms {
             this.remotePort = arg.remotePort;
         });
         
-        ipcMain.on('read-logs', (event, arg) => {
-            console.log("reading lines");
-            let readInterface = readline.createInterface({
-                input: fs.createReadStream(app.getPath('userData') + '/DebugLogs.txt'),
-                console: true
-            }); 
-            readInterface.on('line', function(line) {
-                if (JSON.parse(line).transmission === 'received'){
-                    // console.log("Sending console data");
-                    // console.log(line);
-                    appMainWindow.get().webContents.send('console-data', line);  
-                    // console.log(appMainWindow.get());
-                    // event.sender.send('console-data', line);        
-                }
-            });         
-        })
+        // ipcMain.on('read-logs', (event, arg) => {
+        //     console.log("reading lines");
+        //     let readInterface = readline.createInterface({
+        //         input: fs.createReadStream(app.getPath('userData') + '/DebugLogs.txt'),
+        //         console: true
+        //     }); 
+        //     readInterface.on('line', function(line) {
+        //         if (JSON.parse(line).transmission === 'received'){
+        //             // console.log("Sending console data");
+        //             // console.log(line);
+        //             appMainWindow.get().webContents.send('console-data', line);  
+        //             // console.log(appMainWindow.get());
+        //             // event.sender.send('console-data', line);        
+        //         }
+        //     });         
+        // })
         
-        ipcMain.handle('clear-logs', (event, arg) => {
+        // ipcMain.handle('clear-logs', (event, arg) => {
         
-        })
+        // })
 
     }
 
@@ -124,7 +124,7 @@ class UdpComms {
         let endTime = new Date();
         let time = endTime; // time to be sent to renderer
         let elapsedTime = 0;
-        console.log("Received message from " + remote.address + ':' + remote.port +' - ' + message);
+        // console.log("Received message from " + remote.address + ':' + remote.port +' - ' + message);
 
         let incomingMessageContent = message.toString();
         let incomingMessageType = incomingMessageContent[0];
@@ -144,6 +144,7 @@ class UdpComms {
                             elapsedTime = endTime - new Date(this.sentMessageBuffer[i].time);
                             this.sentMessageBuffer.splice(i, 1); // remove message from sent messages
                             i = this.sentMessageBuffer.length + 1; // exit loop
+                            console.log(this.sentMessageBuffer);
                         }
                     }
                 }
@@ -160,7 +161,7 @@ class UdpComms {
             time: time
         });   
         // ARRIVING MESSAGES SHOULD BE SAVED TO THE DEBUG HERE
-        fs.appendFile(app.getPath('userData') + '/DebugLogs.txt', FinalMessage + '\n', () => {}); // bad code
+        // fs.appendFile(app.getPath('userData') + '/DebugLogs.txt', FinalMessage + '\n', () => {}); // bad code
         appMainWindow.get().webContents.send('received-udp-message', FinalMessage);     
     }
 
@@ -172,7 +173,7 @@ class UdpComms {
         if(JSONMessage.type === "move" || JSONMessage.type === "test"){
             bufferMessage = Buffer.from((JSONMessage.type[0] + JSONMessage.data).toString()); // add prefix to message based on type, using first char of type (better way of doing this to be found)
         }
-        console.log(bufferMessage.toString());
+        // console.log(bufferMessage.toString());
         this.clientSock.send(bufferMessage, this.remotePort, this.remoteIP, (err, bytes) => {
         if(err !== null){
             if(err.message.includes('getaddrinfo')){

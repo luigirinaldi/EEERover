@@ -9,13 +9,14 @@ import { DiscreteControl, AnalogueControl } from '../components/MotorControlComp
 const electron = window.require('electron');
 const { ipcRenderer } = electron;
 
-const CONTROLLER_POLLING_RATE = 150; // in milliseconds 
-class MotorControl extends React.Component {
+const CONTROLLER_POLLING_RATE = 150; // in milliseconds
+
+export class MotorControlSection extends React.Component {
   //to time how long each udp requests takes:
-    // the code sent is saved with the start time of the request 
-    // upon receiving udp packet code is compared and time taken is found
-    
-    constructor(props){
+  // the code sent is saved with the start time of the request 
+  // upon receiving udp packet code is compared and time taken is found
+  
+  constructor(props){
     super(props)
     
     this.state = {
@@ -87,32 +88,49 @@ class MotorControl extends React.Component {
   const { roverIP } = this.context;
 
   return(            
+    <>
+      <DiscreteControl 
+        sendCode={this.sendCode}
+        testConnection={this.testConnection}
+        gamepad={this.gamepad}
+      />
+        <h3>Analogue Control</h3>
+        {this.state.controllerAvailable ? 
+          <>
+            <p>Controller Connected!</p>
+            <p>ID: {this.state.controllerID}</p>
+            <AnalogueControl 
+              sendCode={this.sendCode}
+              testConnection={this.testConnection}
+              gamepad={this.gamepad}
+            />
+          </>
+          : 
+          <p>Press a button on the controller</p>
+        }
+    </>   
+  )}
+}
+
+MotorControlSection.contextType = IpContext; //set the context to access global IP var
+export class MotorControl extends React.Component {
+
+
+  render(){
+    const { roverIP } = this.context;
+
+  return(            
     <PageContainer title="Motor Control UDP">   
       <div className='Grid-Container'>
         <div className='row1'>
-          <DiscreteControl 
-            sendCode={this.sendCode}
-            testConnection={this.testConnection}
-            gamepad={this.gamepad}
-          />
-            <h3>Analogue Control</h3>
-            {this.state.controllerAvailable ? 
-              <>
-                <p>Controller Connected!</p>
-                <p>ID: {this.state.controllerID}</p>
-                <AnalogueControl 
-                  sendCode={this.sendCode}
-                  testConnection={this.testConnection}
-                  gamepad={this.gamepad}
-                />
-              </>
-              : 
-              <p>Press a button on the controller</p>
-            }
+          <MotorControlSection />
         </div>
         {/* TODO, add clear output button */}
         <div className='row2'> 
           <DebugOutput Title="Arduino Responses" IP={roverIP} types={['move','test','error']}/>
+        </div>
+        <div className='row3'> 
+          <DebugOutput Title="Arduino Responses" IP={roverIP} types={['data']}/>
         </div>
       </div>
     </PageContainer>     
@@ -121,4 +139,3 @@ class MotorControl extends React.Component {
 
 MotorControl.contextType = IpContext; //set the context to access global IP var
   
-export default MotorControl;

@@ -10,7 +10,7 @@ import Home from './pages/Home';
 import Debug from './pages/Debug';
 import ErrorLogs from './pages/ErrorLogs';
 import Settings from './pages/Settings';
-import MotorControl from './pages/MotorControl';
+import { MotorControl } from './pages/MotorControl';
 
 const electron = window.require('electron');
 const { ipcRenderer } = electron;
